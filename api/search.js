@@ -42,15 +42,17 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  // 4. buscar nas 4 lojas em paralelo
-  const [r0, r1, r2, r3] = await Promise.allSettled([
+  // 4. buscar nas 6 lojas em paralelo
+  const [r0, r1, r2, r3, r4, r5] = await Promise.allSettled([
     searchNeeche(slug),
     searchNuvemshop('the_gregs', slug),
     searchNuvemshop('pequi', slug),
-    searchNuvemshop('king_of_parfums', slug)
+    searchNuvemshop('king_of_parfums', slug),
+    searchNuvemshop('rivoli', slug),
+    searchNuvemshop('mellalta', slug)
   ]);
 
-  const results = [r0, r1, r2, r3]
+  const results = [r0, r1, r2, r3, r4, r5]
     .filter(r => r.status === 'fulfilled' && r.value !== null)
     .map(r => r.value);
 
