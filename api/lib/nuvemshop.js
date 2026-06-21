@@ -20,6 +20,18 @@ const STORES = {
     display_name: 'The King of Parfums',
     domain: 'thekingofparfums.com.br',
     search_url: (q) => `https://www.thekingofparfums.com.br/busca/?q=${encodeURIComponent(q)}`
+  },
+  rivoli: {
+    id: 'rivoli',
+    display_name: 'Rivoli Perfumaria',
+    domain: 'rivoliperfumaria.com.br',
+    search_url: (q) => `https://www.rivoliperfumaria.com.br/busca/?q=${encodeURIComponent(q)}`
+  },
+  mellalta: {
+    id: 'mellalta',
+    display_name: 'Mell Alta Perfumaria',
+    domain: 'mellaltaperfumaria.com.br',
+    search_url: (q) => `https://www.mellaltaperfumaria.com.br/loja/busca.php?loja=1053276&palavra_busca=${encodeURIComponent(q)}`
   }
 };
 
