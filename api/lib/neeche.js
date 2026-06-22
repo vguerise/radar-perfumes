@@ -1,4 +1,4 @@
-async function searchNeeche(term) {
+﻿async function searchNeeche(term) {
   const url = `https://www.neeche.com.br/api/catalog_system/pub/products/search?ft=${encodeURIComponent(term)}`;
 
   let products;
@@ -15,7 +15,15 @@ async function searchNeeche(term) {
 
   if (!Array.isArray(products) || !products.length) return null;
 
-  const p = products[0];
+  // Validate that the returned product name matches the search term
+  const termTokens = term.toLowerCase().split(/[-\s]+/).filter(t => t.length > 2);
+  const p = products.find(prod => {
+    const name = (prod.productName || '').toLowerCase();
+    const matched = termTokens.filter(t => name.includes(t));
+    return matched.length >= Math.ceil(termTokens.length * 0.6);
+  });
+  if (!p) return null;
+
   const item = p.items?.[0];
   const offer = item?.sellers?.[0]?.commertialOffer;
   if (!offer || offer.Price <= 0) return null;
