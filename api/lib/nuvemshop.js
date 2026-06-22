@@ -86,11 +86,15 @@ ${trimmed}`
   if (!extracted.price_cents || extracted.price_cents <= 0 || extracted.price_cents > 5000000) return null;
   if (!extracted.product_url?.startsWith(`https://${store.domain}`)) return null;
 
-  // Extra validation: slug tokens must appear in returned product name
+  // Tiebreaker: nome do perfume (nao so a marca) deve estar no resultado
   const termTokens = term.toLowerCase().split(/[-\s]+/).filter(t => t.length > 2);
-  const nameTokens = (extracted.product_name || '').toLowerCase();
-  const matched = termTokens.filter(t => nameTokens.includes(t));
-  if (matched.length < Math.ceil(termTokens.length * 0.5)) return null;
+  const nameStr = (extracted.product_name || '').toLowerCase();
+  const matched = termTokens.filter(t => nameStr.includes(t));
+  if (matched.length < Math.ceil(termTokens.length * 0.6)) return null;
+  if (termTokens.length >= 2) {
+    const primary = termTokens.reduce((a, b) => b.length >= a.length ? b : a, termTokens[0]);
+    if (!nameStr.includes(primary)) return null;
+  }
 
   return {
     store: store.id,
