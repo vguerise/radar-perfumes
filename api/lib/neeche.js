@@ -18,7 +18,13 @@
   const p = products.find(prod => {
     const name = (prod.productName || '').toLowerCase();
     const matched = termTokens.filter(t => name.includes(t));
-    return matched.length >= Math.ceil(termTokens.length * 0.6);
+    if (matched.length < Math.ceil(termTokens.length * 0.6)) return false;
+    // Tiebreaker: token mais especifico (nome do perfume) deve estar presente
+    if (termTokens.length >= 2) {
+      const primary = termTokens.reduce((a, b) => b.length >= a.length ? b : a, termTokens[0]);
+      if (!name.includes(primary)) return false;
+    }
+    return true;
   });
   if (!p) return null;
 
