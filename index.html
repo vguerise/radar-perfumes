@@ -9,136 +9,144 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --orange: #E85D04; --orange-light: #F48C06;
-      --black: #111111; --black-soft: #1A1A1A; --charcoal: #2D2D2D;
-      --gray-dark: #444444; --gray-mid: #777777; --gray-light: #E8E8E8;
-      --white: #FFFFFF; --success: #2A9D5C; --danger: #D62828;
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{--orange:#E85D04;--orange-light:#F48C06;--black:#111111;--black-soft:#1A1A1A;--charcoal:#2D2D2D;--gray-dark:#444444;--gray-mid:#777777;--gray-light:#E8E8E8;--white:#FFFFFF;--success:#2A9D5C;--danger:#D62828;}
+    body{background:var(--black);color:var(--white);font-family:'DM Sans',sans-serif;}
+    .screen{display:none;}
+    .screen.active{display:flex;flex-direction:column;}
+    #screen-login.active{align-items:center;justify-content:center;min-height:100dvh;padding:32px 24px;background:radial-gradient(ellipse at 50% -10%,#2d1200 0%,var(--black) 55%);}
+    #screen-app.active{flex-direction:row;height:100dvh;overflow:hidden;}
+    .login-card{width:100%;max-width:420px;}
+    .login-eyebrow{font-size:11px;font-weight:700;letter-spacing:.25em;text-transform:uppercase;color:var(--orange);margin-bottom:40px;text-align:center;}
+    .login-title{font-family:'Montserrat',sans-serif;font-size:34px;font-weight:900;line-height:1.15;text-align:center;margin-bottom:10px;}
+    .login-subtitle{font-size:15px;font-weight:300;color:var(--gray-mid);text-align:center;line-height:1.6;margin-bottom:44px;}
+    .login-form{display:flex;flex-direction:column;gap:12px;}
+    .input-field{background:var(--black-soft);border:1.5px solid var(--charcoal);color:var(--white);font-family:'DM Sans',sans-serif;font-size:15px;padding:15px 18px;border-radius:10px;outline:none;width:100%;transition:border-color .2s;}
+    .input-field:focus{border-color:var(--orange);}
+    .input-field::placeholder{color:var(--gray-dark);}
+    .btn-primary{background:var(--orange);color:var(--white);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;padding:15px 24px;border:none;border-radius:10px;cursor:pointer;transition:background .2s,transform .1s;}
+    .btn-primary:hover{background:var(--orange-light);}
+    .btn-primary:active{transform:scale(.98);}
+    .btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+    .form-error{font-size:13px;color:var(--danger);text-align:center;min-height:18px;}
+    .sidebar{width:220px;min-width:220px;background:var(--black-soft);border-right:1px solid var(--charcoal);display:flex;flex-direction:column;flex-shrink:0;padding:24px 0 20px;}
+    .sidebar-brand{padding:0 20px 28px;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:900;letter-spacing:.25em;text-transform:uppercase;color:var(--orange);}
+    .sidebar-nav{flex:1;display:flex;flex-direction:column;gap:2px;padding:0 10px;}
+    .nav-item{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;border:none;background:none;color:var(--gray-mid);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;text-align:left;width:100%;transition:background .15s,color .15s;}
+    .nav-item:hover{background:var(--charcoal);color:var(--white);}
+    .nav-item.active{background:rgba(232,93,4,.15);color:var(--orange);font-weight:700;}
+    .nav-icon{flex-shrink:0;width:18px;height:18px;display:flex;align-items:center;justify-content:center;}
+    .sidebar-footer{padding:0 10px;}
+    .btn-logout{width:100%;padding:10px 12px;border-radius:8px;border:1.5px solid var(--charcoal);background:none;color:var(--gray-mid);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:border-color .2s,color .2s;text-align:left;}
+    .btn-logout:hover{border-color:var(--gray-mid);color:var(--white);}
+    .main-content{flex:1;overflow:hidden;display:flex;flex-direction:column;min-width:0;}
+    .panel{display:none;flex:1;flex-direction:column;overflow-y:auto;min-height:0;}
+    .panel.active{display:flex;}
+    .search-hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px 64px;}
+    .search-hero.compact{flex:0;padding:24px 24px 0;}
+    .search-title{font-family:'Montserrat',sans-serif;font-size:24px;font-weight:900;text-align:center;margin-bottom:8px;}
+    .search-title.hidden,.search-desc.hidden{display:none;}
+    .search-desc{font-size:14px;color:var(--gray-mid);text-align:center;margin-bottom:28px;font-weight:300;}
+    .search-row{display:flex;width:100%;max-width:600px;gap:8px;}
+    .input-search{flex:1;background:var(--black-soft);border:1.5px solid var(--charcoal);color:var(--white);font-family:'DM Sans',sans-serif;font-size:16px;padding:14px 18px;border-radius:12px;outline:none;transition:border-color .2s;min-width:0;}
+    .input-search:focus{border-color:var(--orange);}
+    .input-search::placeholder{color:var(--gray-dark);}
+    .btn-search{background:var(--orange);color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;padding:14px 22px;border:none;border-radius:12px;cursor:pointer;white-space:nowrap;transition:background .2s;flex-shrink:0;}
+    .btn-search:hover{background:var(--orange-light);}
+    .btn-search:disabled{opacity:.45;cursor:not-allowed;}
+    .results-wrap{width:100%;max-width:700px;margin:0 auto;padding:20px 24px 48px;}
+    .results-meta{font-size:12px;color:var(--gray-mid);margin-bottom:14px;}
+    .result-card{background:var(--black-soft);border:1.5px solid var(--charcoal);border-radius:12px;padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;transition:border-color .2s;}
+    .result-card:hover{border-color:var(--gray-dark);}
+    .result-card.cheapest{border-color:var(--orange);}
+    .result-thumb{width:60px;height:60px;flex-shrink:0;border-radius:8px;overflow:hidden;background:var(--charcoal);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .result-thumb img{width:100%;height:100%;object-fit:contain;padding:4px;}
+    .result-thumb.no-img{display:none;}
+    .result-rank{font-family:'Montserrat',sans-serif;font-size:11px;font-weight:900;color:var(--gray-dark);width:18px;flex-shrink:0;}
+    .result-card.cheapest .result-rank{color:var(--orange);}
+    .result-info{flex:1;min-width:0;}
+    .result-store{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-mid);margin-bottom:3px;}
+    .result-name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
+    .result-updated{font-size:11px;color:var(--gray-dark);}
+    .result-price-block{text-align:right;flex-shrink:0;}
+    .result-price{font-family:'Montserrat',sans-serif;font-size:19px;font-weight:900;color:var(--white);margin-bottom:8px;}
+    .result-card.cheapest .result-price{color:var(--orange);}
+    .result-actions{display:flex;gap:6px;align-items:center;justify-content:flex-end;}
+    .btn-offer{display:inline-block;background:none;border:1.5px solid var(--charcoal);color:var(--gray-light);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;padding:7px 12px;border-radius:8px;cursor:pointer;text-decoration:none;transition:background .2s,color .2s,border-color .2s;white-space:nowrap;}
+    .btn-offer:hover{background:var(--orange);border-color:var(--orange);color:var(--white);}
+    .btn-heart{background:none;border:1.5px solid var(--charcoal);color:var(--gray-dark);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
+    .btn-heart:hover{border-color:var(--danger);color:var(--danger);}
+    .btn-heart.active{border-color:var(--danger);color:var(--danger);background:rgba(214,40,40,.1);}
+    .state-box{text-align:center;color:var(--gray-mid);font-size:14px;padding:48px 24px;line-height:1.7;}
+    .spinner{width:26px;height:26px;border:2px solid var(--charcoal);border-top-color:var(--orange);border-radius:50%;animation:spin .75s linear infinite;margin:0 auto 18px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .list-wrap{width:100%;max-width:620px;margin:0 auto;padding:28px 24px 48px;display:flex;flex-direction:column;gap:18px;}
+    .panel-title{font-family:'Montserrat',sans-serif;font-size:18px;font-weight:900;margin-bottom:4px;}
+    .panel-subtitle{font-size:13px;color:var(--gray-mid);font-weight:300;line-height:1.6;}
+    .manual-row{display:flex;gap:8px;}
+    .manual-row .input-search{font-size:15px;padding:12px 16px;}
+    .manual-row .btn-search{padding:12px 18px;font-size:13px;}
+    .upload-zone{display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px 20px;border:1.5px dashed var(--charcoal);border-radius:12px;cursor:pointer;transition:border-color .2s,background .2s;text-align:center;}
+    .upload-zone:hover{border-color:var(--orange);background:rgba(232,93,4,.04);}
+    .upload-label{font-size:14px;font-weight:500;color:var(--gray-light);}
+    .upload-hint{font-size:12px;color:var(--gray-dark);}
+    .upload-status{font-size:13px;color:var(--success);min-height:16px;text-align:center;}
+    .upload-status.error{color:var(--danger);}
+    .list-divider{height:1px;background:var(--charcoal);}
+    .list-count{font-size:11px;color:var(--gray-mid);font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
+    .list-items{display:flex;flex-direction:column;gap:8px;}
+    .list-item{display:flex;align-items:center;background:var(--black-soft);border:1.5px solid var(--charcoal);border-radius:10px;padding:11px 14px;gap:10px;}
+    .list-item-name{flex:1;font-size:14px;font-weight:500;}
+    .btn-remove{background:none;border:none;color:var(--gray-dark);font-size:14px;cursor:pointer;padding:4px 6px;border-radius:6px;transition:color .2s,background .2s;flex-shrink:0;}
+    .btn-remove:hover{color:var(--danger);background:rgba(214,40,40,.1);}
+    .btn-ver-precos{font-size:11px;font-weight:700;padding:6px 12px;border-radius:7px;border:1.5px solid var(--charcoal);background:none;color:var(--gray-light);cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;transition:all .2s;}
+    .btn-ver-precos:hover{background:var(--orange);border-color:var(--orange);color:var(--white);}
+    #panel-concierge{overflow:hidden;}
+    .chat-container{display:flex;flex-direction:column;flex:1;min-height:0;}
+    .chat-messages{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:12px;}
+    .chat-msg{display:flex;}
+    .chat-msg.user{justify-content:flex-end;}
+    .chat-msg.assistant{justify-content:flex-start;}
+    .chat-bubble{max-width:80%;padding:12px 16px;border-radius:14px;font-size:14px;line-height:1.65;}
+    .chat-msg.user .chat-bubble{background:var(--orange);color:var(--white);border-bottom-right-radius:4px;}
+    .chat-msg.assistant .chat-bubble{background:var(--black-soft);border:1.5px solid var(--charcoal);color:var(--white);border-bottom-left-radius:4px;}
+    .chat-input-bar{display:flex;gap:8px;padding:12px 24px 20px;border-top:1px solid var(--charcoal);flex-shrink:0;background:var(--black);}
+    .input-chat{flex:1;background:var(--black-soft);border:1.5px solid var(--charcoal);color:var(--white);font-family:'DM Sans',sans-serif;font-size:15px;padding:12px 16px;border-radius:12px;outline:none;transition:border-color .2s;}
+    .input-chat:focus{border-color:var(--orange);}
+    .input-chat::placeholder{color:var(--gray-dark);}
+    .btn-send{background:var(--orange);color:var(--white);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;padding:12px 20px;border:none;border-radius:12px;cursor:pointer;white-space:nowrap;transition:background .2s;flex-shrink:0;}
+    .btn-send:hover{background:var(--orange-light);}
+    .btn-send:disabled{opacity:.45;cursor:not-allowed;}
+    .typing-dots{display:flex;gap:4px;align-items:center;padding:2px 0;}
+    .typing-dots span{width:6px;height:6px;background:var(--gray-mid);border-radius:50%;animation:bounce 1.2s infinite;}
+    .typing-dots span:nth-child(2){animation-delay:.2s;}
+    .typing-dots span:nth-child(3){animation-delay:.4s;}
+    @keyframes bounce{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-5px);}}
+    .img-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);align-items:center;justify-content:center;z-index:999;padding:20px;}
+    .img-modal.open{display:flex;}
+    .img-modal-box{background:var(--black-soft);border:1px solid var(--charcoal);border-radius:16px;padding:20px;max-width:420px;width:100%;position:relative;}
+    .img-modal-close{position:absolute;top:12px;right:12px;background:var(--charcoal);border:none;color:var(--white);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;}
+    .img-modal-close:hover{background:var(--gray-dark);}
+    .img-modal-photo{width:100%;max-height:55vh;object-fit:contain;border-radius:8px;display:block;}
+    .img-modal-name{margin-top:12px;font-size:13px;font-weight:500;color:var(--gray-light);text-align:center;}
+    @media(max-width:640px){
+      #screen-app.active{flex-direction:column;}
+      .sidebar{width:100%;min-width:unset;flex-direction:row;padding:0;border-right:none;border-top:1px solid var(--charcoal);order:2;align-items:stretch;}
+      .sidebar-brand,.sidebar-footer{display:none;}
+      .sidebar-nav{flex-direction:row;padding:0;gap:0;flex:1;}
+      .nav-item{flex-direction:column;gap:3px;padding:8px 4px;border-radius:0;flex:1;justify-content:center;align-items:center;font-size:10px;}
+      .nav-icon{width:20px;height:20px;}
+      .main-content{order:1;flex:1;min-height:0;}
     }
-    body { background: var(--black); color: var(--white); font-family: 'DM Sans', sans-serif; min-height: 100dvh; }
-    .screen { display: none; }
-    .screen.active { display: flex; flex-direction: column; min-height: 100dvh; }
-    #screen-app.active { height: 100dvh; min-height: unset; overflow: hidden; }
-
-    /* LOGIN */
-    #screen-login { align-items: center; justify-content: center; padding: 32px 24px; background: radial-gradient(ellipse at 50% -10%, #2d1200 0%, var(--black) 55%); }
-    .login-card { width: 100%; max-width: 420px; }
-    .login-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: var(--orange); margin-bottom: 40px; text-align: center; }
-    .login-title { font-family: 'Montserrat', sans-serif; font-size: 34px; font-weight: 900; line-height: 1.15; text-align: center; margin-bottom: 10px; }
-    .login-subtitle { font-size: 15px; font-weight: 300; color: var(--gray-mid); text-align: center; line-height: 1.6; margin-bottom: 44px; }
-    .login-form { display: flex; flex-direction: column; gap: 12px; }
-    .input-field { background: var(--black-soft); border: 1.5px solid var(--charcoal); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 15px; padding: 15px 18px; border-radius: 10px; outline: none; width: 100%; transition: border-color 0.2s; }
-    .input-field:focus { border-color: var(--orange); }
-    .input-field::placeholder { color: var(--gray-dark); }
-    .btn-primary { background: var(--orange); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.03em; padding: 15px 24px; border: none; border-radius: 10px; cursor: pointer; transition: background 0.2s, transform 0.1s; }
-    .btn-primary:hover { background: var(--orange-light); }
-    .btn-primary:active { transform: scale(0.98); }
-    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
-    .form-error { font-size: 13px; color: var(--danger); text-align: center; min-height: 18px; }
-
-    /* APP SHELL */
-    #screen-app { flex-direction: column; }
-    .app-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid var(--charcoal); flex-shrink: 0; }
-    .app-brand { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase; color: var(--orange); }
-    .btn-logout { background: none; border: 1.5px solid var(--charcoal); color: var(--gray-mid); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; padding: 7px 14px; border-radius: 8px; cursor: pointer; transition: border-color 0.2s, color 0.2s; }
-    .btn-logout:hover { border-color: var(--gray-mid); color: var(--white); }
-
-    /* TABS */
-    .tab-nav { display: flex; border-bottom: 1px solid var(--charcoal); flex-shrink: 0; }
-    .tab-btn { flex: 1; padding: 12px 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--gray-mid); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: color 0.2s, border-color 0.2s; letter-spacing: 0.01em; }
-    .tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); font-weight: 700; }
-    .tab-btn:hover:not(.active) { color: var(--gray-light); }
-    .tab-panel { display: none; flex-direction: column; flex: 1; overflow-y: auto; min-height: 0; }
-    .tab-panel.active { display: flex; }
-
-    /* SEARCH TAB */
-    .search-hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 24px 64px; }
-    .search-hero.compact { flex: 0; justify-content: flex-start; padding: 28px 24px 0; }
-    .search-title { font-family: 'Montserrat', sans-serif; font-size: 26px; font-weight: 900; text-align: center; margin-bottom: 8px; }
-    .search-title.hidden, .search-desc.hidden { display: none; }
-    .search-desc { font-size: 14px; color: var(--gray-mid); text-align: center; margin-bottom: 32px; font-weight: 300; }
-    .search-row { display: flex; width: 100%; max-width: 620px; gap: 8px; }
-    .input-search { flex: 1; background: var(--black-soft); border: 1.5px solid var(--charcoal); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 16px; padding: 16px 20px; border-radius: 12px; outline: none; transition: border-color 0.2s; }
-    .input-search:focus { border-color: var(--orange); }
-    .input-search::placeholder { color: var(--gray-dark); }
-    .btn-search { background: var(--orange); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; padding: 16px 24px; border: none; border-radius: 12px; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
-    .btn-search:hover { background: var(--orange-light); }
-    .btn-search:disabled { opacity: 0.45; cursor: not-allowed; }
-    .results-wrap { width: 100%; max-width: 668px; margin: 0 auto; padding: 24px 24px 48px; }
-    .results-meta { font-size: 12px; color: var(--gray-mid); margin-bottom: 16px; }
-    .result-card { background: var(--black-soft); border: 1.5px solid var(--charcoal); border-radius: 12px; padding: 20px; margin-bottom: 10px; display: flex; align-items: center; gap: 16px; transition: border-color 0.2s; }
-    .result-card:hover { border-color: var(--gray-dark); }
-    .result-card.cheapest { border-color: var(--orange); }
-    .result-rank { font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 900; color: var(--gray-dark); width: 20px; flex-shrink: 0; }
-    .result-card.cheapest .result-rank { color: var(--orange); }
-    .result-info { flex: 1; min-width: 0; }
-    .result-store { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-mid); margin-bottom: 4px; }
-    .result-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
-    .result-updated { font-size: 11px; color: var(--gray-dark); }
-    .result-price-block { text-align: right; flex-shrink: 0; }
-    .result-price { font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 900; color: var(--white); margin-bottom: 10px; }
-    .result-card.cheapest .result-price { color: var(--orange); }
-    .btn-offer { display: inline-block; background: none; border: 1.5px solid var(--charcoal); color: var(--gray-light); font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; padding: 7px 14px; border-radius: 8px; cursor: pointer; text-decoration: none; transition: background 0.2s, color 0.2s, border-color 0.2s; white-space: nowrap; }
-    .btn-offer:hover { background: var(--orange); border-color: var(--orange); color: var(--white); }
-    .state-box { text-align: center; color: var(--gray-mid); font-size: 14px; padding: 48px 24px; line-height: 1.7; }
-    .spinner { width: 26px; height: 26px; border: 2px solid var(--charcoal); border-top-color: var(--orange); border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 18px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* COLLECTION TAB */
-    .collection-wrap { width: 100%; max-width: 620px; margin: 0 auto; padding: 28px 24px 48px; display: flex; flex-direction: column; gap: 20px; }
-    .section-title { font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 900; margin-bottom: 4px; }
-    .section-subtitle { font-size: 13px; color: var(--gray-mid); font-weight: 300; line-height: 1.6; }
-    .manual-row { display: flex; gap: 8px; }
-    .manual-row .input-search { font-size: 15px; padding: 13px 18px; }
-    .manual-row .btn-search { padding: 13px 20px; font-size: 13px; }
-    .upload-zone { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 28px 20px; border: 1.5px dashed var(--charcoal); border-radius: 12px; cursor: pointer; transition: border-color 0.2s, background 0.2s; text-align: center; }
-    .upload-zone:hover { border-color: var(--orange); background: rgba(232,93,4,0.04); }
-    .upload-icon { font-size: 26px; }
-    .upload-label { font-size: 14px; font-weight: 500; color: var(--gray-light); }
-    .upload-hint { font-size: 12px; color: var(--gray-dark); }
-    .upload-status { font-size: 13px; color: var(--success); min-height: 16px; text-align: center; }
-    .upload-status.error { color: var(--danger); }
-    .collection-divider { height: 1px; background: var(--charcoal); }
-    .collection-count { font-size: 11px; color: var(--gray-mid); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
-    #collection-list { display: flex; flex-direction: column; gap: 8px; }
-    .collection-item { display: flex; align-items: center; background: var(--black-soft); border: 1.5px solid var(--charcoal); border-radius: 10px; padding: 12px 16px; gap: 12px; }
-    .collection-name { flex: 1; font-size: 14px; font-weight: 500; }
-    .btn-remove { background: none; border: none; color: var(--gray-dark); font-size: 14px; cursor: pointer; padding: 4px 6px; border-radius: 6px; line-height: 1; transition: color 0.2s, background 0.2s; flex-shrink: 0; }
-    .btn-remove:hover { color: var(--danger); background: rgba(214,40,40,0.1); }
-
-    /* ASSISTANT TAB */
-    #tab-assistant { overflow: hidden; }
-    .chat-container { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-    .chat-messages { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; }
-    .chat-msg { display: flex; }
-    .chat-msg.user { justify-content: flex-end; }
-    .chat-msg.assistant { justify-content: flex-start; }
-    .chat-bubble { max-width: 82%; padding: 12px 16px; border-radius: 14px; font-size: 14px; line-height: 1.65; }
-    .chat-msg.user .chat-bubble { background: var(--orange); color: var(--white); border-bottom-right-radius: 4px; }
-    .chat-msg.assistant .chat-bubble { background: var(--black-soft); border: 1.5px solid var(--charcoal); color: var(--white); border-bottom-left-radius: 4px; }
-    .chat-input-bar { display: flex; gap: 8px; padding: 12px 24px 20px; border-top: 1px solid var(--charcoal); flex-shrink: 0; background: var(--black); }
-    .input-chat { flex: 1; background: var(--black-soft); border: 1.5px solid var(--charcoal); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 15px; padding: 13px 18px; border-radius: 12px; outline: none; transition: border-color 0.2s; }
-    .input-chat:focus { border-color: var(--orange); }
-    .input-chat::placeholder { color: var(--gray-dark); }
-    .btn-send { background: var(--orange); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; padding: 13px 22px; border: none; border-radius: 12px; cursor: pointer; white-space: nowrap; transition: background 0.2s; flex-shrink: 0; }
-    .btn-send:hover { background: var(--orange-light); }
-    .btn-send:disabled { opacity: 0.45; cursor: not-allowed; }
-    .typing-dots { display: flex; gap: 4px; align-items: center; padding: 2px 0; }
-    .typing-dots span { width: 6px; height: 6px; background: var(--gray-mid); border-radius: 50%; animation: bounce 1.2s infinite; }
-    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
   </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="screen-login" class="screen">
   <div class="login-card">
     <p class="login-eyebrow">Vguerise</p>
     <h1 class="login-title">Radar de Perfumes Nicho</h1>
-    <p class="login-subtitle">Compare preços em tempo real entre as<br>principais lojas de nicho do Brasil.</p>
+    <p class="login-subtitle">Compare precos em tempo real entre as<br>principais lojas de nicho do Brasil.</p>
     <form class="login-form" id="form-login" novalidate>
       <input class="input-field" type="email" id="input-email" placeholder="Seu e-mail" autocomplete="email" required>
       <button class="btn-primary" type="submit" id="btn-login">Entrar</button>
@@ -147,360 +155,246 @@
   </div>
 </div>
 
-<!-- APP -->
 <div id="screen-app" class="screen">
-  <header class="app-header">
-    <span class="app-brand">Radar · Perfumes</span>
-    <button class="btn-logout" id="btn-logout">Sair</button>
-  </header>
-
-  <nav class="tab-nav" role="tablist">
-    <button class="tab-btn active" data-tab="search" role="tab" aria-selected="true">Buscar</button>
-    <button class="tab-btn" data-tab="collection" role="tab" aria-selected="false">Colecao</button>
-    <button class="tab-btn" data-tab="assistant" role="tab" aria-selected="false">Assistente</button>
-  </nav>
-
-  <!-- TAB: BUSCAR -->
-  <div id="tab-search" class="tab-panel active" role="tabpanel">
-    <div class="search-hero" id="search-hero">
-      <h2 class="search-title" id="search-title">Buscar perfume</h2>
-      <p class="search-desc" id="search-desc">Digite o nome do perfume para comparar precos nas lojas monitoradas</p>
-      <div class="search-row">
-        <input class="input-search" type="text" id="input-search"
-          placeholder="Ex: Xerjoff Naxos 100ml" autocomplete="off" spellcheck="false">
-        <button class="btn-search" id="btn-search">Buscar</button>
-      </div>
+  <aside class="sidebar">
+    <div class="sidebar-brand">Radar &middot; Perfumes</div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-panel="search">
+        <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        Buscar
+      </button>
+      <button class="nav-item" data-panel="wishlist">
+        <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
+        Wishlist
+      </button>
+      <button class="nav-item" data-panel="collection">
+        <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
+        Minha Colecao
+      </button>
+      <button class="nav-item" data-panel="concierge">
+        <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+        Pergunte ao Concierge
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-logout" id="btn-logout">Sair</button>
     </div>
-    <div class="results-wrap" id="results-wrap"></div>
-  </div>
+  </aside>
 
-  <!-- TAB: COLECAO -->
-  <div id="tab-collection" class="tab-panel" role="tabpanel">
-    <div class="collection-wrap">
-      <div>
-        <h2 class="section-title">Minha Colecao</h2>
-        <p class="section-subtitle">Perfumes que voce ja possui. O Assistente usa essa lista para evitar repeticoes e personalizar recomendacoes.</p>
-      </div>
-
-      <div class="manual-row">
-        <input class="input-search" type="text" id="input-manual" placeholder="Nome do perfume (ex: Xerjoff Naxos)">
-        <button class="btn-search" id="btn-add-manual">Adicionar</button>
-      </div>
-
-      <label class="upload-zone" for="input-file">
-        <span class="upload-icon">&#128196;</span>
-        <span class="upload-label">Arraste ou clique para importar arquivo</span>
-        <span class="upload-hint">Suporta .txt e .pdf &middot; Perfumes extraidos automaticamente pela IA</span>
-      </label>
-      <input id="input-file" type="file" accept=".txt,.pdf" style="display:none">
-      <p id="upload-status" class="upload-status"></p>
-
-      <div class="collection-divider"></div>
-      <span class="collection-count" id="collection-count">0 perfumes</span>
-      <div id="collection-list"></div>
-    </div>
-  </div>
-
-  <!-- TAB: ASSISTENTE -->
-  <div id="tab-assistant" class="tab-panel" role="tabpanel">
-    <div class="chat-container">
-      <div class="chat-messages" id="chat-messages">
-        <div class="chat-msg assistant">
-          <div class="chat-bubble">Ola! Descreva o que procura &mdash; uma ocasiao, humor, estilo &mdash; e busco os melhores perfumes com precos em tempo real nas lojas de nicho do Brasil.</div>
+  <main class="main-content">
+    <div id="panel-search" class="panel active">
+      <div class="search-hero" id="search-hero">
+        <h2 class="search-title" id="search-title">Buscar perfume</h2>
+        <p class="search-desc" id="search-desc">Digite o nome do perfume para comparar precos nas lojas monitoradas</p>
+        <div class="search-row">
+          <input class="input-search" type="text" id="input-search" placeholder="Ex: Xerjoff Naxos 100ml" autocomplete="off" spellcheck="false">
+          <button class="btn-search" id="btn-search">Buscar</button>
         </div>
       </div>
-      <div class="chat-input-bar">
-        <input class="input-chat" id="input-chat" type="text"
-          placeholder="Ex: elegante para noite formal, quero impressionar..." autocomplete="off" spellcheck="false">
-        <button class="btn-send" id="btn-send-chat">Enviar</button>
+      <div class="results-wrap" id="results-wrap"></div>
+    </div>
+
+    <div id="panel-wishlist" class="panel">
+      <div class="list-wrap">
+        <div><h2 class="panel-title">Wishlist</h2><p class="panel-subtitle">Perfumes que voce quer comprar. Clique em ver precos para buscar direto.</p></div>
+        <div class="manual-row">
+          <input class="input-search" type="text" id="input-wishlist" placeholder="Adicionar perfume a wishlist">
+          <button class="btn-search" id="btn-add-wishlist">Adicionar</button>
+        </div>
+        <div class="list-divider"></div>
+        <span class="list-count" id="wishlist-count">0 perfumes</span>
+        <div class="list-items" id="wishlist-list"></div>
       </div>
     </div>
+
+    <div id="panel-collection" class="panel">
+      <div class="list-wrap">
+        <div><h2 class="panel-title">Minha Colecao</h2><p class="panel-subtitle">Perfumes que voce ja possui. O Concierge usa essa lista ao recomendar.</p></div>
+        <div class="manual-row">
+          <input class="input-search" type="text" id="input-collection" placeholder="Adicionar perfume a colecao">
+          <button class="btn-search" id="btn-add-collection">Adicionar</button>
+        </div>
+        <label class="upload-zone" for="input-file">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--gray-dark)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span class="upload-label">Arraste ou clique para importar arquivo</span>
+          <span class="upload-hint">Suporta .txt e .pdf &middot; Perfumes extraidos pela IA</span>
+        </label>
+        <input id="input-file" type="file" accept=".txt,.pdf" style="display:none">
+        <p id="upload-status" class="upload-status"></p>
+        <div class="list-divider"></div>
+        <span class="list-count" id="collection-count">0 perfumes</span>
+        <div class="list-items" id="collection-list"></div>
+      </div>
+    </div>
+
+    <div id="panel-concierge" class="panel">
+      <div class="chat-container">
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-msg assistant"><div class="chat-bubble">Ola! Sou o Concierge de Perfumes. Descreva o que procura &mdash; uma ocasiao, humor ou estilo &mdash; e recomendo os melhores com precos em tempo real.</div></div>
+        </div>
+        <div class="chat-input-bar">
+          <input class="input-chat" id="input-chat" type="text" placeholder="Ex: elegante para jantar formal, quero impressionar..." autocomplete="off" spellcheck="false">
+          <button class="btn-send" id="btn-send-chat">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="img-modal" class="img-modal" onclick="closeImgModal()">
+  <div class="img-modal-box" onclick="event.stopPropagation()">
+    <button class="img-modal-close" onclick="closeImgModal()">&#x2715;</button>
+    <img id="img-modal-photo" src="" alt="" class="img-modal-photo">
+    <p id="img-modal-name" class="img-modal-name"></p>
   </div>
 </div>
 
 <script>
-(function () {
-  const TOKEN_KEY = 'radar_token';
-  const COLLECTION_KEY = 'radar_collection';
+(function(){
+  var TK='radar_token',WK='radar_wishlist',CK='radar_collection';
+  var gt=function(){return localStorage.getItem(TK);};
+  var st=function(t){localStorage.setItem(TK,t);};
+  var rt=function(){localStorage.removeItem(TK);};
+  var esc=function(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
+  var fmt=function(c){return(c/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});};
+  var ago=function(iso){var h=Math.floor((Date.now()-new Date(iso).getTime())/3600000);return h<1?'agora mesmo':h===1?'ha 1h':'ha '+h+'h';};
+  var showScr=function(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById(id).classList.add('active');};
 
-  function getToken() { return localStorage.getItem(TOKEN_KEY); }
-  function saveToken(t) { localStorage.setItem(TOKEN_KEY, t); }
-  function removeToken() { localStorage.removeItem(TOKEN_KEY); }
-
-  function show(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-  }
-
-  function formatBRL(cents) {
-    return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  }
-
-  function timeAgo(iso) {
-    const h = Math.floor((Date.now() - new Date(iso).getTime()) / 3600000);
-    if (h < 1) return 'agora mesmo';
-    return h === 1 ? 'ha 1h' : `ha ${h}h`;
-  }
-
-  function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  /* INIT */
-  (async function init() {
-    const t = getToken();
-    if (!t) return show('screen-login');
-    try {
-      const r = await fetch('/api/auth/verify', { headers: { Authorization: `Bearer ${t}` } });
-      r.ok ? show('screen-app') : (removeToken(), show('screen-login'));
-    } catch { show('screen-app'); }
-    renderCollection();
+  (async function(){
+    var t=gt();if(!t)return showScr('screen-login');
+    try{var r=await fetch('/api/auth/verify',{headers:{Authorization:'Bearer '+t}});r.ok?showScr('screen-app'):(rt(),showScr('screen-login'));}catch{showScr('screen-app');}
+    rW();rC();
   })();
 
-  /* LOGIN */
-  document.getElementById('form-login').addEventListener('submit', async (e) => {
+  document.getElementById('form-login').addEventListener('submit',async function(e){
     e.preventDefault();
-    const email = document.getElementById('input-email').value.trim();
-    const btn = document.getElementById('btn-login');
-    const err = document.getElementById('login-error');
-    err.textContent = '';
-    btn.disabled = true; btn.textContent = 'Entrando...';
-    try {
-      const r = await fetch('/api/auth/login', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || 'Falha no servidor');
-      saveToken(data.token);
-      show('screen-app');
-      renderCollection();
-    } catch (ex) { err.textContent = ex.message; }
-    finally { btn.disabled = false; btn.textContent = 'Entrar'; }
+    var em=document.getElementById('input-email').value.trim();
+    var btn=document.getElementById('btn-login'),err=document.getElementById('login-error');
+    err.textContent='';btn.disabled=true;btn.textContent='Entrando...';
+    try{
+      var r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em})});
+      var d=await r.json();if(!r.ok)throw new Error(d.error||'Falha');
+      st(d.token);showScr('screen-app');rW();rC();
+    }catch(ex){err.textContent=ex.message;}finally{btn.disabled=false;btn.textContent='Entrar';}
   });
 
-  /* LOGOUT */
-  document.getElementById('btn-logout').addEventListener('click', () => {
-    removeToken();
-    document.getElementById('results-wrap').innerHTML = '';
-    document.getElementById('input-search').value = '';
+  document.getElementById('btn-logout').addEventListener('click',function(){
+    rt();document.getElementById('results-wrap').innerHTML='';document.getElementById('input-search').value='';
     document.getElementById('search-hero').classList.remove('compact');
     document.getElementById('search-title').classList.remove('hidden');
     document.getElementById('search-desc').classList.remove('hidden');
-    show('screen-login');
+    showScr('screen-login');
   });
 
-  /* TABS */
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.toggle('active', b === btn);
-        b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
-      });
-      const targetId = `tab-${btn.dataset.tab}`;
-      document.querySelectorAll('.tab-panel').forEach(p => {
-        p.classList.toggle('active', p.id === targetId);
-      });
+  var curPanel='search';
+  function switchPanel(id){
+    curPanel=id;
+    document.querySelectorAll('.nav-item').forEach(function(b){b.classList.toggle('active',b.dataset.panel===id);});
+    document.querySelectorAll('.panel').forEach(function(p){p.classList.toggle('active',p.id==='panel-'+id);});
+    if(id==='wishlist')rW();if(id==='collection')rC();
+  }
+  document.querySelectorAll('.nav-item').forEach(function(b){b.addEventListener('click',function(){switchPanel(b.dataset.panel);});});
+
+  async function doSearch(){
+    var q=document.getElementById('input-search').value.trim();if(!q)return;
+    var btn=document.getElementById('btn-search'),wrap=document.getElementById('results-wrap'),hero=document.getElementById('search-hero');
+    btn.disabled=true;hero.classList.add('compact');
+    document.getElementById('search-title').classList.add('hidden');document.getElementById('search-desc').classList.add('hidden');
+    wrap.innerHTML='<div class="state-box"><div class="spinner"></div>Buscando nas lojas...</div>';
+    try{
+      var r=await fetch('/api/search',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+gt()},body:JSON.stringify({query:q})});
+      if(r.status===401){rt();return showScr('screen-login');}if(!r.ok)throw new Error('');
+      renderRes(await r.json());
+    }catch{wrap.innerHTML='<div class="state-box">Falha na busca. Tente novamente.</div>';}finally{btn.disabled=false;}
+  }
+
+  function renderRes(data){
+    var dn=data.display_name,res=data.results,ca=data.cached_at;
+    var el=document.getElementById('results-wrap');
+    var list=(res||[]).filter(function(r){return r.available!==false;});
+    if(!list.length){el.innerHTML='<div class="state-box">Nao encontramos esse perfume nas lojas monitoradas.</div>';return;}
+    list.sort(function(a,b){return a.price_cents-b.price_cents;});
+    var ag=ca?ago(ca):'';
+    var wl=gW();var inWl=wl.some(function(p){return p.toLowerCase()===(dn||'').toLowerCase();});
+    var html='<div class="results-meta">'+esc(dn||'')+' &middot; atualizado '+ag+'</div>';
+    list.forEach(function(item,i){
+      var th='';
+      if(item.image_url){th='<div class="result-thumb" onclick="openMod(\''+esc(item.image_url)+'\',\''+esc(item.product_name||dn||'')+'\')"><img src="'+esc(item.image_url)+'" alt="" loading="lazy" onerror="this.closest(\'.result-thumb\').classList.add(\'no-img\')"></div>';}
+      html+='<div class="result-card'+(i===0?' cheapest':'')+'">'+th+'<span class="result-rank">#'+(i+1)+'</span><div class="result-info"><div class="result-store">'+esc(item.store_display_name||item.store)+'</div><div class="result-name">'+esc(item.product_name||dn||'')+'</div><div class="result-updated">atualizado '+ag+'</div></div><div class="result-price-block"><div class="result-price">'+fmt(item.price_cents)+'</div><div class="result-actions"><button class="btn-heart'+(inWl?' active':'')+'" onclick="togWL(\''+esc(dn||'')+'\',this)">&#x2665;</button><a class="btn-offer" href="'+esc(item.product_url)+'" target="_blank" rel="noopener noreferrer">ver oferta</a></div></div></div>';
     });
-  });
-
-  /* SEARCH */
-  async function doSearch() {
-    const query = document.getElementById('input-search').value.trim();
-    if (!query) return;
-    const btn = document.getElementById('btn-search');
-    const results = document.getElementById('results-wrap');
-    const hero = document.getElementById('search-hero');
-    btn.disabled = true;
-    hero.classList.add('compact');
-    document.getElementById('search-title').classList.add('hidden');
-    document.getElementById('search-desc').classList.add('hidden');
-    results.innerHTML = '<div class="state-box"><div class="spinner"></div>Buscando nas lojas...</div>';
-    try {
-      const r = await fetch('/api/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-        body: JSON.stringify({ query })
-      });
-      if (r.status === 401) { removeToken(); return show('screen-login'); }
-      if (!r.ok) throw new Error(`Erro ${r.status}`);
-      renderResults(await r.json());
-    } catch { results.innerHTML = '<div class="state-box">Falha na busca. Tente novamente.</div>'; }
-    finally { btn.disabled = false; }
+    el.innerHTML=html;
   }
 
-  function renderResults({ display_name, results, cached_at }) {
-    const el = document.getElementById('results-wrap');
-    const list = (results || []).filter(r => r.available !== false);
-    if (!list.length) {
-      el.innerHTML = '<div class="state-box">Nao encontramos esse perfume nas lojas monitoradas.</div>';
-      return;
-    }
-    list.sort((a, b) => a.price_cents - b.price_cents);
-    const ago = cached_at ? timeAgo(cached_at) : '';
-    el.innerHTML = `
-      <div class="results-meta">${escHtml(display_name || '')} &middot; atualizado ${ago}</div>
-      ${list.map((item, i) => `
-        <div class="result-card${i === 0 ? ' cheapest' : ''}">
-          <span class="result-rank">#${i + 1}</span>
-          <div class="result-info">
-            <div class="result-store">${escHtml(item.store_display_name || item.store)}</div>
-            <div class="result-name">${escHtml(item.product_name || display_name || '')}</div>
-            <div class="result-updated">atualizado ${ago}</div>
-          </div>
-          <div class="result-price-block">
-            <div class="result-price">${formatBRL(item.price_cents)}</div>
-            <a class="btn-offer" href="${escHtml(item.product_url)}" target="_blank" rel="noopener noreferrer">ver oferta</a>
-          </div>
-        </div>
-      `).join('')}
-    `;
-  }
+  document.getElementById('btn-search').addEventListener('click',doSearch);
+  document.getElementById('input-search').addEventListener('keydown',function(e){if(e.key==='Enter')doSearch();});
 
-  document.getElementById('btn-search').addEventListener('click', doSearch);
-  document.getElementById('input-search').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
-
-  /* COLLECTION */
-  function getCollection() {
-    try { return JSON.parse(localStorage.getItem(COLLECTION_KEY) || '[]'); } catch { return []; }
-  }
-
-  function persistCollection(arr) {
-    localStorage.setItem(COLLECTION_KEY, JSON.stringify(arr));
-    renderCollection();
-  }
-
-  function addToCollection(name) {
-    name = name.trim();
-    if (!name) return false;
-    const col = getCollection();
-    if (col.some(p => p.toLowerCase() === name.toLowerCase())) return false;
-    col.push(name);
-    persistCollection(col);
-    return true;
-  }
-
-  window.removeFromCollection = function(i) {
-    const col = getCollection();
-    col.splice(i, 1);
-    persistCollection(col);
+  function gW(){try{return JSON.parse(localStorage.getItem(WK)||'[]');}catch{return[];}}
+  function sW(a){localStorage.setItem(WK,JSON.stringify(a));}
+  window.togWL=function(name,btn){
+    name=name.trim();if(!name)return;
+    var wl=gW(),idx=wl.findIndex(function(p){return p.toLowerCase()===name.toLowerCase();});
+    if(idx>=0){wl.splice(idx,1);btn.classList.remove('active');}else{wl.push(name);btn.classList.add('active');}
+    sW(wl);if(curPanel==='wishlist')rW();
   };
-
-  function renderCollection() {
-    const col = getCollection();
-    const listEl = document.getElementById('collection-list');
-    const countEl = document.getElementById('collection-count');
-    if (!listEl) return;
-    countEl.textContent = `${col.length} perfume${col.length !== 1 ? 's' : ''}`;
-    if (!col.length) {
-      listEl.innerHTML = '<div class="state-box" style="padding:32px 0">Nenhum perfume na colecao ainda.</div>';
-      return;
-    }
-    listEl.innerHTML = col.map((p, i) => `
-      <div class="collection-item">
-        <span class="collection-name">${escHtml(p)}</span>
-        <button class="btn-remove" onclick="removeFromCollection(${i})" aria-label="Remover">&#x2715;</button>
-      </div>
-    `).join('');
+  window.rmWL=function(i){var wl=gW();wl.splice(i,1);sW(wl);rW();};
+  window.srchFrom=function(name){switchPanel('search');document.getElementById('input-search').value=name;doSearch();};
+  function addWL(n){n=n.trim();if(!n)return false;var wl=gW();if(wl.some(function(p){return p.toLowerCase()===n.toLowerCase();}))return false;wl.push(n);sW(wl);return true;}
+  function rW(){
+    var wl=gW(),el=document.getElementById('wishlist-list'),cnt=document.getElementById('wishlist-count');
+    if(!el)return;cnt.textContent=wl.length+' perfume'+(wl.length!==1?'s':'');
+    if(!wl.length){el.innerHTML='<div class="state-box" style="padding:28px 0">Wishlist vazia. Busque e clique no coracao para salvar.</div>';return;}
+    el.innerHTML=wl.map(function(p,i){return'<div class="list-item"><span class="list-item-name">'+esc(p)+'</span><button class="btn-ver-precos" onclick="srchFrom(\''+esc(p)+'\')">ver precos</button><button class="btn-remove" onclick="rmWL('+i+')">&#x2715;</button></div>';}).join('');
   }
+  document.getElementById('btn-add-wishlist').addEventListener('click',function(){var inp=document.getElementById('input-wishlist');if(addWL(inp.value)){inp.value='';rW();}});
+  document.getElementById('input-wishlist').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('btn-add-wishlist').click();});
 
-  document.getElementById('btn-add-manual').addEventListener('click', () => {
-    const input = document.getElementById('input-manual');
-    if (addToCollection(input.value)) input.value = '';
-  });
-
-  document.getElementById('input-manual').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('btn-add-manual').click();
-  });
-
-  document.getElementById('input-file').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const statusEl = document.getElementById('upload-status');
-    statusEl.className = 'upload-status';
-    statusEl.textContent = 'Processando arquivo...';
-    try {
-      let payload;
-      const name = file.name.toLowerCase();
-      if (name.endsWith('.pdf')) {
-        const base64 = await new Promise((res, rej) => {
-          const reader = new FileReader();
-          reader.onload = ev => res(ev.target.result.split(',')[1]);
-          reader.onerror = rej;
-          reader.readAsDataURL(file);
-        });
-        payload = { content: base64, fileType: 'pdf' };
-      } else if (name.endsWith('.txt')) {
-        const text = await file.text();
-        payload = { content: text, fileType: 'txt' };
-      } else {
-        statusEl.className = 'upload-status error';
-        statusEl.textContent = 'Formato nao suportado. Use .txt ou .pdf.';
-        return;
-      }
-      const r = await fetch('/api/parse-collection', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-        body: JSON.stringify(payload)
-      });
-      const data = await r.json();
-      let added = 0;
-      (data.perfumes || []).forEach(p => { if (addToCollection(p)) added++; });
-      statusEl.textContent = added > 0
-        ? `${added} perfume${added > 1 ? 's' : ''} adicionado${added > 1 ? 's' : ''}.`
-        : 'Nenhum perfume novo encontrado no arquivo.';
-    } catch {
-      statusEl.className = 'upload-status error';
-      statusEl.textContent = 'Erro ao processar. Tente novamente.';
-    } finally { e.target.value = ''; }
-  });
-
-  /* ASSISTANT */
-  let chatHistory = [];
-
-  function appendMsg(role, html) {
-    const container = document.getElementById('chat-messages');
-    const div = document.createElement('div');
-    div.className = `chat-msg ${role}`;
-    div.innerHTML = `<div class="chat-bubble">${html}</div>`;
-    container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
-    return div;
+  function gC(){try{return JSON.parse(localStorage.getItem(CK)||'[]');}catch{return[];}}
+  function sC(a){localStorage.setItem(CK,JSON.stringify(a));}
+  function addC(n){n=n.trim();if(!n)return false;var c=gC();if(c.some(function(p){return p.toLowerCase()===n.toLowerCase();}))return false;c.push(n);sC(c);return true;}
+  window.rmC=function(i){var c=gC();c.splice(i,1);sC(c);rC();};
+  function rC(){
+    var col=gC(),el=document.getElementById('collection-list'),cnt=document.getElementById('collection-count');
+    if(!el)return;cnt.textContent=col.length+' perfume'+(col.length!==1?'s':'');
+    if(!col.length){el.innerHTML='<div class="state-box" style="padding:28px 0">Nenhum perfume na colecao ainda.</div>';return;}
+    el.innerHTML=col.map(function(p,i){return'<div class="list-item"><span class="list-item-name">'+esc(p)+'</span><button class="btn-remove" onclick="rmC('+i+')">&#x2715;</button></div>';}).join('');
   }
-
-  async function sendChat() {
-    const input = document.getElementById('input-chat');
-    const msg = input.value.trim();
-    if (!msg) return;
-    const btn = document.getElementById('btn-send-chat');
-    input.value = '';
-    appendMsg('user', escHtml(msg));
-    const typingDiv = appendMsg('assistant', '<div class="typing-dots"><span></span><span></span><span></span></div>');
-    btn.disabled = true; input.disabled = true;
-    try {
-      const r = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
-        body: JSON.stringify({ message: msg, history: chatHistory, collection: getCollection() })
-      });
-      if (r.status === 401) { removeToken(); return show('screen-login'); }
-      const data = await r.json();
-      chatHistory = data.history || chatHistory;
-      typingDiv.remove();
-      appendMsg('assistant', escHtml(data.reply || 'Nao consegui processar sua solicitacao.').replace(/\n/g, '<br>'));
-    } catch {
-      typingDiv.remove();
-      appendMsg('assistant', 'Erro de conexao. Tente novamente.');
-    } finally {
-      btn.disabled = false; input.disabled = false; input.focus();
-    }
-  }
-
-  document.getElementById('btn-send-chat').addEventListener('click', sendChat);
-  document.getElementById('input-chat').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+  document.getElementById('btn-add-collection').addEventListener('click',function(){var inp=document.getElementById('input-collection');if(addC(inp.value)){inp.value='';rC();}});
+  document.getElementById('input-collection').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('btn-add-collection').click();});
+  document.getElementById('input-file').addEventListener('change',async function(e){
+    var file=e.target.files[0];if(!file)return;
+    var ss=document.getElementById('upload-status');ss.className='upload-status';ss.textContent='Processando...';
+    try{
+      var payload,nm=file.name.toLowerCase();
+      if(nm.endsWith('.pdf')){var b64=await new Promise(function(res,rej){var fr=new FileReader();fr.onload=function(ev){res(ev.target.result.split(',')[1]);};fr.onerror=rej;fr.readAsDataURL(file);});payload={content:b64,fileType:'pdf'};}
+      else if(nm.endsWith('.txt')){payload={content:await file.text(),fileType:'txt'};}
+      else{ss.className='upload-status error';ss.textContent='Use .txt ou .pdf';return;}
+      var r=await fetch('/api/parse-collection',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+gt()},body:JSON.stringify(payload)});
+      var d=await r.json();var added=0;(d.perfumes||[]).forEach(function(p){if(addC(p))added++;});rC();
+      ss.textContent=added>0?added+' perfume'+(added>1?'s':'')+' adicionado'+(added>1?'s':'.')+'.':'Nenhum perfume novo encontrado.';
+    }catch{ss.className='upload-status error';ss.textContent='Erro ao processar.';}finally{e.target.value='';}
   });
 
+  var chatHist=[];
+  function addMsg(role,html){var c=document.getElementById('chat-messages'),d=document.createElement('div');d.className='chat-msg '+role;d.innerHTML='<div class="chat-bubble">'+html+'</div>';c.appendChild(d);c.scrollTop=c.scrollHeight;return d;}
+  async function sendChat(){
+    var inp=document.getElementById('input-chat'),msg=inp.value.trim();if(!msg)return;
+    var btn=document.getElementById('btn-send-chat');inp.value='';addMsg('user',esc(msg));
+    var tp=addMsg('assistant','<div class="typing-dots"><span></span><span></span><span></span></div>');
+    btn.disabled=true;inp.disabled=true;
+    try{
+      var r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+gt()},body:JSON.stringify({message:msg,history:chatHist,collection:gC()})});
+      if(r.status===401){rt();return showScr('screen-login');}
+      var data=await r.json();chatHist=data.history||chatHist;tp.remove();
+      addMsg('assistant',esc(data.reply||'Nao consegui processar.').replace(/\n/g,'<br>'));
+    }catch{tp.remove();addMsg('assistant','Erro de conexao. Tente novamente.');}
+    finally{btn.disabled=false;inp.disabled=false;inp.focus();}
+  }
+  document.getElementById('btn-send-chat').addEventListener('click',sendChat);
+  document.getElementById('input-chat').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}});
+
+  window.openMod=function(url,name){document.getElementById('img-modal-photo').src=url;document.getElementById('img-modal-name').textContent=name;document.getElementById('img-modal').classList.add('open');};
+  window.closeImgModal=function(){document.getElementById('img-modal').classList.remove('open');document.getElementById('img-modal-photo').src='';};
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeImgModal();});
 })();
 </script>
 </body>
