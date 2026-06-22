@@ -9,13 +9,11 @@
     });
     if (!r.ok) return null;
     products = await r.json();
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 
   if (!Array.isArray(products) || !products.length) return null;
 
-  // Validate that the returned product name matches the search term
+  // Find first product whose name matches the search term tokens
   const termTokens = term.toLowerCase().split(/[-\s]+/).filter(t => t.length > 2);
   const p = products.find(prod => {
     const name = (prod.productName || '').toLowerCase();
@@ -28,6 +26,10 @@
   const offer = item?.sellers?.[0]?.commertialOffer;
   if (!offer || offer.Price <= 0) return null;
 
+  // Extract image URL from VTEX response
+  const rawImageUrl = item?.images?.[0]?.imageUrl || null;
+  const imageUrl = rawImageUrl ? rawImageUrl.replace(/-\d+x\d+\.(\w+)$/, '.$1') : null;
+
   return {
     store: 'neeche',
     store_display_name: 'Neeche',
@@ -35,6 +37,7 @@
     price_cents: Math.round(offer.Price * 100),
     currency: 'BRL',
     product_url: `https://www.neeche.com.br/${p.linkText}/p`,
+    image_url: imageUrl,
     available: (offer.AvailableQuantity || 0) > 0,
     extraction_confidence: 100
   };
