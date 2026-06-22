@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -10,379 +10,218 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --orange: #E85D04;
-      --orange-light: #F48C06;
-      --black: #111111;
-      --black-soft: #1A1A1A;
-      --charcoal: #2D2D2D;
-      --gray-dark: #444444;
-      --gray-mid: #777777;
-      --gray-light: #E8E8E8;
-      --white: #FFFFFF;
-      --success: #2A9D5C;
-      --danger: #D62828;
+      --orange: #E85D04; --orange-light: #F48C06;
+      --black: #111111; --black-soft: #1A1A1A; --charcoal: #2D2D2D;
+      --gray-dark: #444444; --gray-mid: #777777; --gray-light: #E8E8E8;
+      --white: #FFFFFF; --success: #2A9D5C; --danger: #D62828;
     }
-
-    body {
-      background: var(--black);
-      color: var(--white);
-      font-family: 'DM Sans', sans-serif;
-      min-height: 100dvh;
-    }
-
+    body { background: var(--black); color: var(--white); font-family: 'DM Sans', sans-serif; min-height: 100dvh; }
     .screen { display: none; }
     .screen.active { display: flex; flex-direction: column; min-height: 100dvh; }
+    #screen-app.active { height: 100dvh; min-height: unset; overflow: hidden; }
 
-    /* ─── LOGIN ─── */
-    #screen-login {
-      align-items: center;
-      justify-content: center;
-      padding: 32px 24px;
-      background: radial-gradient(ellipse at 50% -10%, #2d1200 0%, var(--black) 55%);
-    }
-
+    /* LOGIN */
+    #screen-login { align-items: center; justify-content: center; padding: 32px 24px; background: radial-gradient(ellipse at 50% -10%, #2d1200 0%, var(--black) 55%); }
     .login-card { width: 100%; max-width: 420px; }
-
-    .login-eyebrow {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.25em;
-      text-transform: uppercase;
-      color: var(--orange);
-      margin-bottom: 40px;
-      text-align: center;
-    }
-
-    .login-title {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 34px;
-      font-weight: 900;
-      line-height: 1.15;
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    .login-subtitle {
-      font-size: 15px;
-      font-weight: 300;
-      color: var(--gray-mid);
-      text-align: center;
-      line-height: 1.6;
-      margin-bottom: 44px;
-    }
-
+    .login-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: var(--orange); margin-bottom: 40px; text-align: center; }
+    .login-title { font-family: 'Montserrat', sans-serif; font-size: 34px; font-weight: 900; line-height: 1.15; text-align: center; margin-bottom: 10px; }
+    .login-subtitle { font-size: 15px; font-weight: 300; color: var(--gray-mid); text-align: center; line-height: 1.6; margin-bottom: 44px; }
     .login-form { display: flex; flex-direction: column; gap: 12px; }
-
-    .input-field {
-      background: var(--black-soft);
-      border: 1.5px solid var(--charcoal);
-      color: var(--white);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
-      padding: 15px 18px;
-      border-radius: 10px;
-      outline: none;
-      width: 100%;
-      transition: border-color 0.2s;
-    }
-
+    .input-field { background: var(--black-soft); border: 1.5px solid var(--charcoal); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 15px; padding: 15px 18px; border-radius: 10px; outline: none; width: 100%; transition: border-color 0.2s; }
     .input-field:focus { border-color: var(--orange); }
     .input-field::placeholder { color: var(--gray-dark); }
-
-    .btn-primary {
-      background: var(--orange);
-      color: var(--white);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      padding: 15px 24px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-    }
-
+    .btn-primary { background: var(--orange); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.03em; padding: 15px 24px; border: none; border-radius: 10px; cursor: pointer; transition: background 0.2s, transform 0.1s; }
     .btn-primary:hover { background: var(--orange-light); }
     .btn-primary:active { transform: scale(0.98); }
     .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .form-error { font-size: 13px; color: var(--danger); text-align: center; min-height: 18px; }
 
-    .form-error {
-      font-size: 13px;
-      color: var(--danger);
-      text-align: center;
-      min-height: 18px;
-    }
-
-    /* ─── APP ─── */
+    /* APP SHELL */
     #screen-app { flex-direction: column; }
-
-    .app-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 24px;
-      border-bottom: 1px solid var(--charcoal);
-      flex-shrink: 0;
-    }
-
-    .app-brand {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 12px;
-      font-weight: 900;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--orange);
-    }
-
-    .btn-logout {
-      background: none;
-      border: 1.5px solid var(--charcoal);
-      color: var(--gray-mid);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
-      font-weight: 500;
-      padding: 7px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: border-color 0.2s, color 0.2s;
-    }
-
+    .app-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid var(--charcoal); flex-shrink: 0; }
+    .app-brand { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase; color: var(--orange); }
+    .btn-logout { background: none; border: 1.5px solid var(--charcoal); color: var(--gray-mid); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; padding: 7px 14px; border-radius: 8px; cursor: pointer; transition: border-color 0.2s, color 0.2s; }
     .btn-logout:hover { border-color: var(--gray-mid); color: var(--white); }
 
-    .search-hero {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 24px 64px;
-    }
+    /* TABS */
+    .tab-nav { display: flex; border-bottom: 1px solid var(--charcoal); flex-shrink: 0; }
+    .tab-btn { flex: 1; padding: 12px 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; color: var(--gray-mid); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: color 0.2s, border-color 0.2s; letter-spacing: 0.01em; }
+    .tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); font-weight: 700; }
+    .tab-btn:hover:not(.active) { color: var(--gray-light); }
+    .tab-panel { display: none; flex-direction: column; flex: 1; overflow-y: auto; min-height: 0; }
+    .tab-panel.active { display: flex; }
 
-    .search-hero.compact {
-      flex: 0;
-      justify-content: flex-start;
-      padding: 28px 24px 0;
-    }
-
-    .search-title {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 26px;
-      font-weight: 900;
-      text-align: center;
-      margin-bottom: 8px;
-    }
-
-    .search-title.hidden { display: none; }
-
-    .search-desc {
-      font-size: 14px;
-      color: var(--gray-mid);
-      text-align: center;
-      margin-bottom: 32px;
-      font-weight: 300;
-    }
-
-    .search-desc.hidden { display: none; }
-
-    .search-row {
-      display: flex;
-      width: 100%;
-      max-width: 620px;
-      gap: 8px;
-    }
-
-    .input-search {
-      flex: 1;
-      background: var(--black-soft);
-      border: 1.5px solid var(--charcoal);
-      color: var(--white);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 16px;
-      padding: 16px 20px;
-      border-radius: 12px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
+    /* SEARCH TAB */
+    .search-hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 24px 64px; }
+    .search-hero.compact { flex: 0; justify-content: flex-start; padding: 28px 24px 0; }
+    .search-title { font-family: 'Montserrat', sans-serif; font-size: 26px; font-weight: 900; text-align: center; margin-bottom: 8px; }
+    .search-title.hidden, .search-desc.hidden { display: none; }
+    .search-desc { font-size: 14px; color: var(--gray-mid); text-align: center; margin-bottom: 32px; font-weight: 300; }
+    .search-row { display: flex; width: 100%; max-width: 620px; gap: 8px; }
+    .input-search { flex: 1; background: var(--black-soft); border: 1.5px solid var(--charcoal); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 16px; padding: 16px 20px; border-radius: 12px; outline: none; transition: border-color 0.2s; }
     .input-search:focus { border-color: var(--orange); }
     .input-search::placeholder { color: var(--gray-dark); }
-
-    .btn-search {
-      background: var(--orange);
-      color: var(--white);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 14px;
-      font-weight: 700;
-      padding: 16px 24px;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.2s;
-    }
-
+    .btn-search { background: var(--orange); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; padding: 16px 24px; border: none; border-radius: 12px; cursor: pointer; white-space: nowrap; transition: background 0.2s; }
     .btn-search:hover { background: var(--orange-light); }
     .btn-search:disabled { opacity: 0.45; cursor: not-allowed; }
-
-    /* ─── RESULTS ─── */
-    .results-wrap {
-      width: 100%;
-      max-width: 668px;
-      margin: 0 auto;
-      padding: 24px 24px 48px;
-    }
-
-    .results-meta {
-      font-size: 12px;
-      color: var(--gray-mid);
-      margin-bottom: 16px;
-    }
-
-    .result-card {
-      background: var(--black-soft);
-      border: 1.5px solid var(--charcoal);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      transition: border-color 0.2s;
-    }
-
+    .results-wrap { width: 100%; max-width: 668px; margin: 0 auto; padding: 24px 24px 48px; }
+    .results-meta { font-size: 12px; color: var(--gray-mid); margin-bottom: 16px; }
+    .result-card { background: var(--black-soft); border: 1.5px solid var(--charcoal); border-radius: 12px; padding: 20px; margin-bottom: 10px; display: flex; align-items: center; gap: 16px; transition: border-color 0.2s; }
     .result-card:hover { border-color: var(--gray-dark); }
     .result-card.cheapest { border-color: var(--orange); }
-
-    .result-rank {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 11px;
-      font-weight: 900;
-      color: var(--gray-dark);
-      width: 20px;
-      flex-shrink: 0;
-    }
-
+    .result-rank { font-family: 'Montserrat', sans-serif; font-size: 11px; font-weight: 900; color: var(--gray-dark); width: 20px; flex-shrink: 0; }
     .result-card.cheapest .result-rank { color: var(--orange); }
-
     .result-info { flex: 1; min-width: 0; }
-
-    .result-store {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--gray-mid);
-      margin-bottom: 4px;
-    }
-
-    .result-name {
-      font-size: 14px;
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-bottom: 4px;
-    }
-
-    .result-updated {
-      font-size: 11px;
-      color: var(--gray-dark);
-    }
-
+    .result-store { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gray-mid); margin-bottom: 4px; }
+    .result-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+    .result-updated { font-size: 11px; color: var(--gray-dark); }
     .result-price-block { text-align: right; flex-shrink: 0; }
-
-    .result-price {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 20px;
-      font-weight: 900;
-      color: var(--white);
-      margin-bottom: 10px;
-    }
-
+    .result-price { font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 900; color: var(--white); margin-bottom: 10px; }
     .result-card.cheapest .result-price { color: var(--orange); }
-
-    .btn-offer {
-      display: inline-block;
-      background: none;
-      border: 1.5px solid var(--charcoal);
-      color: var(--gray-light);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      padding: 7px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: background 0.2s, color 0.2s, border-color 0.2s;
-      white-space: nowrap;
-    }
-
+    .btn-offer { display: inline-block; background: none; border: 1.5px solid var(--charcoal); color: var(--gray-light); font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; padding: 7px 14px; border-radius: 8px; cursor: pointer; text-decoration: none; transition: background 0.2s, color 0.2s, border-color 0.2s; white-space: nowrap; }
     .btn-offer:hover { background: var(--orange); border-color: var(--orange); color: var(--white); }
-
-    .state-box {
-      text-align: center;
-      color: var(--gray-mid);
-      font-size: 14px;
-      padding: 64px 0;
-    }
-
-    .spinner {
-      width: 26px;
-      height: 26px;
-      border: 2px solid var(--charcoal);
-      border-top-color: var(--orange);
-      border-radius: 50%;
-      animation: spin 0.75s linear infinite;
-      margin: 0 auto 18px;
-    }
-
+    .state-box { text-align: center; color: var(--gray-mid); font-size: 14px; padding: 48px 24px; line-height: 1.7; }
+    .spinner { width: 26px; height: 26px; border: 2px solid var(--charcoal); border-top-color: var(--orange); border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 18px; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* COLLECTION TAB */
+    .collection-wrap { width: 100%; max-width: 620px; margin: 0 auto; padding: 28px 24px 48px; display: flex; flex-direction: column; gap: 20px; }
+    .section-title { font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 900; margin-bottom: 4px; }
+    .section-subtitle { font-size: 13px; color: var(--gray-mid); font-weight: 300; line-height: 1.6; }
+    .manual-row { display: flex; gap: 8px; }
+    .manual-row .input-search { font-size: 15px; padding: 13px 18px; }
+    .manual-row .btn-search { padding: 13px 20px; font-size: 13px; }
+    .upload-zone { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 28px 20px; border: 1.5px dashed var(--charcoal); border-radius: 12px; cursor: pointer; transition: border-color 0.2s, background 0.2s; text-align: center; }
+    .upload-zone:hover { border-color: var(--orange); background: rgba(232,93,4,0.04); }
+    .upload-icon { font-size: 26px; }
+    .upload-label { font-size: 14px; font-weight: 500; color: var(--gray-light); }
+    .upload-hint { font-size: 12px; color: var(--gray-dark); }
+    .upload-status { font-size: 13px; color: var(--success); min-height: 16px; text-align: center; }
+    .upload-status.error { color: var(--danger); }
+    .collection-divider { height: 1px; background: var(--charcoal); }
+    .collection-count { font-size: 11px; color: var(--gray-mid); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+    #collection-list { display: flex; flex-direction: column; gap: 8px; }
+    .collection-item { display: flex; align-items: center; background: var(--black-soft); border: 1.5px solid var(--charcoal); border-radius: 10px; padding: 12px 16px; gap: 12px; }
+    .collection-name { flex: 1; font-size: 14px; font-weight: 500; }
+    .btn-remove { background: none; border: none; color: var(--gray-dark); font-size: 14px; cursor: pointer; padding: 4px 6px; border-radius: 6px; line-height: 1; transition: color 0.2s, background 0.2s; flex-shrink: 0; }
+    .btn-remove:hover { color: var(--danger); background: rgba(214,40,40,0.1); }
+
+    /* ASSISTANT TAB */
+    #tab-assistant { overflow: hidden; }
+    .chat-container { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+    .chat-messages { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; }
+    .chat-msg { display: flex; }
+    .chat-msg.user { justify-content: flex-end; }
+    .chat-msg.assistant { justify-content: flex-start; }
+    .chat-bubble { max-width: 82%; padding: 12px 16px; border-radius: 14px; font-size: 14px; line-height: 1.65; }
+    .chat-msg.user .chat-bubble { background: var(--orange); color: var(--white); border-bottom-right-radius: 4px; }
+    .chat-msg.assistant .chat-bubble { background: var(--black-soft); border: 1.5px solid var(--charcoal); color: var(--white); border-bottom-left-radius: 4px; }
+    .chat-input-bar { display: flex; gap: 8px; padding: 12px 24px 20px; border-top: 1px solid var(--charcoal); flex-shrink: 0; background: var(--black); }
+    .input-chat { flex: 1; background: var(--black-soft); border: 1.5px solid var(--charcoal); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 15px; padding: 13px 18px; border-radius: 12px; outline: none; transition: border-color 0.2s; }
+    .input-chat:focus { border-color: var(--orange); }
+    .input-chat::placeholder { color: var(--gray-dark); }
+    .btn-send { background: var(--orange); color: var(--white); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; padding: 13px 22px; border: none; border-radius: 12px; cursor: pointer; white-space: nowrap; transition: background 0.2s; flex-shrink: 0; }
+    .btn-send:hover { background: var(--orange-light); }
+    .btn-send:disabled { opacity: 0.45; cursor: not-allowed; }
+    .typing-dots { display: flex; gap: 4px; align-items: center; padding: 2px 0; }
+    .typing-dots span { width: 6px; height: 6px; background: var(--gray-mid); border-radius: 50%; animation: bounce 1.2s infinite; }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
   </style>
 </head>
 <body>
 
-<!-- ─── TELA DE LOGIN ─── -->
+<!-- LOGIN -->
 <div id="screen-login" class="screen">
   <div class="login-card">
     <p class="login-eyebrow">Vguerise</p>
     <h1 class="login-title">Radar de Perfumes Nicho</h1>
     <p class="login-subtitle">Compare preços em tempo real entre as<br>principais lojas de nicho do Brasil.</p>
     <form class="login-form" id="form-login" novalidate>
-      <input class="input-field" type="email" id="input-email"
-        placeholder="Seu e-mail" autocomplete="email" required>
+      <input class="input-field" type="email" id="input-email" placeholder="Seu e-mail" autocomplete="email" required>
       <button class="btn-primary" type="submit" id="btn-login">Entrar</button>
       <p class="form-error" id="login-error" role="alert"></p>
     </form>
   </div>
 </div>
 
-<!-- ─── TELA DO APP ─── -->
+<!-- APP -->
 <div id="screen-app" class="screen">
   <header class="app-header">
     <span class="app-brand">Radar · Perfumes</span>
     <button class="btn-logout" id="btn-logout">Sair</button>
   </header>
 
-  <div class="search-hero" id="search-hero">
-    <h2 class="search-title" id="search-title">Buscar perfume</h2>
-    <p class="search-desc" id="search-desc">Digite o nome do perfume para comparar preços nas lojas monitoradas</p>
-    <div class="search-row">
-      <input class="input-search" type="text" id="input-search"
-        placeholder="Ex: Xerjoff Naxos 100ml" autocomplete="off" spellcheck="false">
-      <button class="btn-search" id="btn-search">Buscar</button>
+  <nav class="tab-nav" role="tablist">
+    <button class="tab-btn active" data-tab="search" role="tab" aria-selected="true">Buscar</button>
+    <button class="tab-btn" data-tab="collection" role="tab" aria-selected="false">Colecao</button>
+    <button class="tab-btn" data-tab="assistant" role="tab" aria-selected="false">Assistente</button>
+  </nav>
+
+  <!-- TAB: BUSCAR -->
+  <div id="tab-search" class="tab-panel active" role="tabpanel">
+    <div class="search-hero" id="search-hero">
+      <h2 class="search-title" id="search-title">Buscar perfume</h2>
+      <p class="search-desc" id="search-desc">Digite o nome do perfume para comparar precos nas lojas monitoradas</p>
+      <div class="search-row">
+        <input class="input-search" type="text" id="input-search"
+          placeholder="Ex: Xerjoff Naxos 100ml" autocomplete="off" spellcheck="false">
+        <button class="btn-search" id="btn-search">Buscar</button>
+      </div>
+    </div>
+    <div class="results-wrap" id="results-wrap"></div>
+  </div>
+
+  <!-- TAB: COLECAO -->
+  <div id="tab-collection" class="tab-panel" role="tabpanel">
+    <div class="collection-wrap">
+      <div>
+        <h2 class="section-title">Minha Colecao</h2>
+        <p class="section-subtitle">Perfumes que voce ja possui. O Assistente usa essa lista para evitar repeticoes e personalizar recomendacoes.</p>
+      </div>
+
+      <div class="manual-row">
+        <input class="input-search" type="text" id="input-manual" placeholder="Nome do perfume (ex: Xerjoff Naxos)">
+        <button class="btn-search" id="btn-add-manual">Adicionar</button>
+      </div>
+
+      <label class="upload-zone" for="input-file">
+        <span class="upload-icon">&#128196;</span>
+        <span class="upload-label">Arraste ou clique para importar arquivo</span>
+        <span class="upload-hint">Suporta .txt e .pdf &middot; Perfumes extraidos automaticamente pela IA</span>
+      </label>
+      <input id="input-file" type="file" accept=".txt,.pdf" style="display:none">
+      <p id="upload-status" class="upload-status"></p>
+
+      <div class="collection-divider"></div>
+      <span class="collection-count" id="collection-count">0 perfumes</span>
+      <div id="collection-list"></div>
     </div>
   </div>
 
-  <div class="results-wrap" id="results-wrap"></div>
+  <!-- TAB: ASSISTENTE -->
+  <div id="tab-assistant" class="tab-panel" role="tabpanel">
+    <div class="chat-container">
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-msg assistant">
+          <div class="chat-bubble">Ola! Descreva o que procura &mdash; uma ocasiao, humor, estilo &mdash; e busco os melhores perfumes com precos em tempo real nas lojas de nicho do Brasil.</div>
+        </div>
+      </div>
+      <div class="chat-input-bar">
+        <input class="input-chat" id="input-chat" type="text"
+          placeholder="Ex: elegante para noite formal, quero impressionar..." autocomplete="off" spellcheck="false">
+        <button class="btn-send" id="btn-send-chat">Enviar</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
 (function () {
   const TOKEN_KEY = 'radar_token';
+  const COLLECTION_KEY = 'radar_collection';
 
   function getToken() { return localStorage.getItem(TOKEN_KEY); }
   function saveToken(t) { localStorage.setItem(TOKEN_KEY, t); }
@@ -400,49 +239,47 @@
   function timeAgo(iso) {
     const h = Math.floor((Date.now() - new Date(iso).getTime()) / 3600000);
     if (h < 1) return 'agora mesmo';
-    return h === 1 ? 'há 1h' : `há ${h}h`;
+    return h === 1 ? 'ha 1h' : `ha ${h}h`;
   }
 
-  // ── Init ──
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* INIT */
   (async function init() {
     const t = getToken();
     if (!t) return show('screen-login');
     try {
       const r = await fetch('/api/auth/verify', { headers: { Authorization: `Bearer ${t}` } });
       r.ok ? show('screen-app') : (removeToken(), show('screen-login'));
-    } catch {
-      show('screen-app');
-    }
+    } catch { show('screen-app'); }
+    renderCollection();
   })();
 
-  // ── Login ──
+  /* LOGIN */
   document.getElementById('form-login').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('input-email').value.trim();
     const btn = document.getElementById('btn-login');
     const err = document.getElementById('login-error');
     err.textContent = '';
-    btn.disabled = true;
-    btn.textContent = 'Entrando…';
+    btn.disabled = true; btn.textContent = 'Entrando...';
     try {
       const r = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || 'Falha no servidor');
       saveToken(data.token);
       show('screen-app');
-    } catch (ex) {
-      err.textContent = ex.message;
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Entrar';
-    }
+      renderCollection();
+    } catch (ex) { err.textContent = ex.message; }
+    finally { btn.disabled = false; btn.textContent = 'Entrar'; }
   });
 
-  // ── Logout ──
+  /* LOGOUT */
   document.getElementById('btn-logout').addEventListener('click', () => {
     removeToken();
     document.getElementById('results-wrap').innerHTML = '';
@@ -453,68 +290,67 @@
     show('screen-login');
   });
 
-  // ── Busca ──
+  /* TABS */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.toggle('active', b === btn);
+        b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+      });
+      const targetId = `tab-${btn.dataset.tab}`;
+      document.querySelectorAll('.tab-panel').forEach(p => {
+        p.classList.toggle('active', p.id === targetId);
+      });
+    });
+  });
+
+  /* SEARCH */
   async function doSearch() {
     const query = document.getElementById('input-search').value.trim();
     if (!query) return;
-
     const btn = document.getElementById('btn-search');
     const results = document.getElementById('results-wrap');
     const hero = document.getElementById('search-hero');
-
     btn.disabled = true;
     hero.classList.add('compact');
     document.getElementById('search-title').classList.add('hidden');
     document.getElementById('search-desc').classList.add('hidden');
-    results.innerHTML = '<div class="state-box"><div class="spinner"></div>Buscando nas lojas…</div>';
-
+    results.innerHTML = '<div class="state-box"><div class="spinner"></div>Buscando nas lojas...</div>';
     try {
       const r = await fetch('/api/search', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${getToken()}`
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
         body: JSON.stringify({ query })
       });
-
       if (r.status === 401) { removeToken(); return show('screen-login'); }
       if (!r.ok) throw new Error(`Erro ${r.status}`);
-
-      const data = await r.json();
-      renderResults(data);
-    } catch (ex) {
-      results.innerHTML = `<div class="state-box">Falha na busca. Tente novamente.</div>`;
-    } finally {
-      btn.disabled = false;
-    }
+      renderResults(await r.json());
+    } catch { results.innerHTML = '<div class="state-box">Falha na busca. Tente novamente.</div>'; }
+    finally { btn.disabled = false; }
   }
 
   function renderResults({ display_name, results, cached_at }) {
     const el = document.getElementById('results-wrap');
     const list = (results || []).filter(r => r.available !== false);
-
     if (!list.length) {
-      el.innerHTML = '<div class="state-box">Não encontramos esse perfume nas lojas monitoradas.</div>';
+      el.innerHTML = '<div class="state-box">Nao encontramos esse perfume nas lojas monitoradas.</div>';
       return;
     }
-
     list.sort((a, b) => a.price_cents - b.price_cents);
     const ago = cached_at ? timeAgo(cached_at) : '';
-
     el.innerHTML = `
-      <div class="results-meta">${display_name || ''} · atualizado ${ago}</div>
+      <div class="results-meta">${escHtml(display_name || '')} &middot; atualizado ${ago}</div>
       ${list.map((item, i) => `
         <div class="result-card${i === 0 ? ' cheapest' : ''}">
           <span class="result-rank">#${i + 1}</span>
           <div class="result-info">
-            <div class="result-store">${item.store_display_name || item.store}</div>
-            <div class="result-name">${item.product_name || display_name || ''}</div>
+            <div class="result-store">${escHtml(item.store_display_name || item.store)}</div>
+            <div class="result-name">${escHtml(item.product_name || display_name || '')}</div>
             <div class="result-updated">atualizado ${ago}</div>
           </div>
           <div class="result-price-block">
             <div class="result-price">${formatBRL(item.price_cents)}</div>
-            <a class="btn-offer" href="${item.product_url}" target="_blank" rel="noopener noreferrer">ver oferta</a>
+            <a class="btn-offer" href="${escHtml(item.product_url)}" target="_blank" rel="noopener noreferrer">ver oferta</a>
           </div>
         </div>
       `).join('')}
@@ -522,9 +358,149 @@
   }
 
   document.getElementById('btn-search').addEventListener('click', doSearch);
-  document.getElementById('input-search').addEventListener('keydown', e => {
-    if (e.key === 'Enter') doSearch();
+  document.getElementById('input-search').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+  /* COLLECTION */
+  function getCollection() {
+    try { return JSON.parse(localStorage.getItem(COLLECTION_KEY) || '[]'); } catch { return []; }
+  }
+
+  function persistCollection(arr) {
+    localStorage.setItem(COLLECTION_KEY, JSON.stringify(arr));
+    renderCollection();
+  }
+
+  function addToCollection(name) {
+    name = name.trim();
+    if (!name) return false;
+    const col = getCollection();
+    if (col.some(p => p.toLowerCase() === name.toLowerCase())) return false;
+    col.push(name);
+    persistCollection(col);
+    return true;
+  }
+
+  window.removeFromCollection = function(i) {
+    const col = getCollection();
+    col.splice(i, 1);
+    persistCollection(col);
+  };
+
+  function renderCollection() {
+    const col = getCollection();
+    const listEl = document.getElementById('collection-list');
+    const countEl = document.getElementById('collection-count');
+    if (!listEl) return;
+    countEl.textContent = `${col.length} perfume${col.length !== 1 ? 's' : ''}`;
+    if (!col.length) {
+      listEl.innerHTML = '<div class="state-box" style="padding:32px 0">Nenhum perfume na colecao ainda.</div>';
+      return;
+    }
+    listEl.innerHTML = col.map((p, i) => `
+      <div class="collection-item">
+        <span class="collection-name">${escHtml(p)}</span>
+        <button class="btn-remove" onclick="removeFromCollection(${i})" aria-label="Remover">&#x2715;</button>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('btn-add-manual').addEventListener('click', () => {
+    const input = document.getElementById('input-manual');
+    if (addToCollection(input.value)) input.value = '';
   });
+
+  document.getElementById('input-manual').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('btn-add-manual').click();
+  });
+
+  document.getElementById('input-file').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const statusEl = document.getElementById('upload-status');
+    statusEl.className = 'upload-status';
+    statusEl.textContent = 'Processando arquivo...';
+    try {
+      let payload;
+      const name = file.name.toLowerCase();
+      if (name.endsWith('.pdf')) {
+        const base64 = await new Promise((res, rej) => {
+          const reader = new FileReader();
+          reader.onload = ev => res(ev.target.result.split(',')[1]);
+          reader.onerror = rej;
+          reader.readAsDataURL(file);
+        });
+        payload = { content: base64, fileType: 'pdf' };
+      } else if (name.endsWith('.txt')) {
+        const text = await file.text();
+        payload = { content: text, fileType: 'txt' };
+      } else {
+        statusEl.className = 'upload-status error';
+        statusEl.textContent = 'Formato nao suportado. Use .txt ou .pdf.';
+        return;
+      }
+      const r = await fetch('/api/parse-collection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify(payload)
+      });
+      const data = await r.json();
+      let added = 0;
+      (data.perfumes || []).forEach(p => { if (addToCollection(p)) added++; });
+      statusEl.textContent = added > 0
+        ? `${added} perfume${added > 1 ? 's' : ''} adicionado${added > 1 ? 's' : ''}.`
+        : 'Nenhum perfume novo encontrado no arquivo.';
+    } catch {
+      statusEl.className = 'upload-status error';
+      statusEl.textContent = 'Erro ao processar. Tente novamente.';
+    } finally { e.target.value = ''; }
+  });
+
+  /* ASSISTANT */
+  let chatHistory = [];
+
+  function appendMsg(role, html) {
+    const container = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = `chat-msg ${role}`;
+    div.innerHTML = `<div class="chat-bubble">${html}</div>`;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return div;
+  }
+
+  async function sendChat() {
+    const input = document.getElementById('input-chat');
+    const msg = input.value.trim();
+    if (!msg) return;
+    const btn = document.getElementById('btn-send-chat');
+    input.value = '';
+    appendMsg('user', escHtml(msg));
+    const typingDiv = appendMsg('assistant', '<div class="typing-dots"><span></span><span></span><span></span></div>');
+    btn.disabled = true; input.disabled = true;
+    try {
+      const r = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ message: msg, history: chatHistory, collection: getCollection() })
+      });
+      if (r.status === 401) { removeToken(); return show('screen-login'); }
+      const data = await r.json();
+      chatHistory = data.history || chatHistory;
+      typingDiv.remove();
+      appendMsg('assistant', escHtml(data.reply || 'Nao consegui processar sua solicitacao.').replace(/\n/g, '<br>'));
+    } catch {
+      typingDiv.remove();
+      appendMsg('assistant', 'Erro de conexao. Tente novamente.');
+    } finally {
+      btn.disabled = false; input.disabled = false; input.focus();
+    }
+  }
+
+  document.getElementById('btn-send-chat').addEventListener('click', sendChat);
+  document.getElementById('input-chat').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+  });
+
 })();
 </script>
 </body>
