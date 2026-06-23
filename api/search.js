@@ -17,6 +17,34 @@ function authGuard(req) {
   }
 }
 
+async function getImagemStorage(slug) {
+  const { data } = await getDb()
+    .from('perfume_imagens')
+    .select('storage_path')
+    .eq('nome_normalizado', slug)
+    .eq('status', 'ok')
+    .maybeSingle();
+  if (!data?.storage_path) return null;
+  return `${process.env.SUPABASE_URL}/storage/v1/object/public/perfume-images/${data.storage_path}`;
+}
+
+function triggerExtracaoImagem(slug) {
+  const url = `${process.env.SUPABASE_URL}/functions/v1/extrair-imagem-neeche`;
+  return fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+    },
+    body: JSON.stringify({ nomeNormalizado: slug, termoBusca: slug }),
+    signal: AbortSignal.timeout(5000),
+  });
+}
+
+function injetarImagem(results, imagemUrl) {
+  for (const r of results) r.image_url = imagemUrl;
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   if (!authGuard(req)) return res.status(401).json({ error: 'Não autorizado' });
@@ -31,9 +59,13 @@ module.exports = async function handler(req, res) {
   // 2. normalizar termo → slug canônico
   const { slug, display_name } = await normalizeQuery(query.trim(), existingSlugs);
 
-  // 3. checar cache
+  // 3. verificar imagem permanente no Storage (sempre fresca, independente do price cache)
+  const imagemUrl = await getImagemStorage(slug);
+
+  // 4. checar price cache
   const cached = await getCached(slug);
   if (cached) {
+    if (imagemUrl) injetarImagem(cached.results, imagemUrl);
     await logSearch(query, slug, true);
     return res.status(200).json({
       display_name: cached.display_name,
@@ -42,7 +74,7 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  // 4. buscar nas 6 lojas em paralelo
+  // 5. buscar nas 6 lojas em paralelo
   const [r0, r1, r2, r3, r4, r5] = await Promise.allSettled([
     searchNeeche(slug),
     searchNuvemshop('the_gregs', slug),
@@ -56,7 +88,14 @@ module.exports = async function handler(req, res) {
     .filter(r => r.status === 'fulfilled' && r.value !== null)
     .map(r => r.value);
 
-  // 5. salvar no cache (parcial é válido: mesmo que nem todas as lojas respondam)
+  // 6. injetar imagem permanente ou acionar extração assíncrona (fire-and-forget)
+  if (imagemUrl) {
+    injetarImagem(results, imagemUrl);
+  } else {
+    triggerExtracaoImagem(slug).catch(() => {});
+  }
+
+  // 7. salvar cache e log
   await saveCache(slug, display_name, results);
   await logSearch(query, slug, false);
 
