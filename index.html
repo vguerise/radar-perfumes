@@ -132,10 +132,25 @@
     .btn-heart{background:none;border:1px solid var(--border);color:var(--text-dim);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
     .btn-heart:hover{border-color:var(--red);color:var(--red)}
     .btn-heart.active{border-color:var(--red);color:var(--red);background:rgba(193,41,46,.1)}
+    .btn-bell{background:none;border:1px solid var(--border);color:var(--text-dim);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+    .btn-bell:hover{border-color:var(--orange);color:var(--orange)}
+    .btn-bell.active{border-color:var(--orange);color:var(--orange);background:rgba(232,93,4,.1)}
     .state-box{text-align:center;color:var(--text-mid);font-size:14px;padding:56px 24px;line-height:1.7}
     .state-box p{color:var(--text-dim);font-size:13px;margin-top:6px}
     .spinner{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 18px}
     @keyframes spin{to{transform:rotate(360deg)}}
+    /* VITRINE */
+    .vitrine-wrap{padding:0 24px;width:100%;max-width:720px;margin:0 auto}
+    .vitrine-label{font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;margin-top:20px}
+    .vitrine-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding-bottom:24px}
+    .vitrine-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s;display:flex;flex-direction:column;gap:6px}
+    .vitrine-card:hover{border-color:var(--border-hi);background:var(--surface2)}
+    .vitrine-img{width:38px;height:38px;border-radius:8px;background:var(--surface2);overflow:hidden;flex-shrink:0}
+    .vitrine-img img{width:100%;height:100%;object-fit:contain;padding:3px}
+    .vitrine-name{font-size:12px;font-weight:600;line-height:1.3;color:var(--text);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+    .vitrine-price{font-size:14px;font-weight:900;font-family:'Montserrat',sans-serif;color:var(--orange)}
+    .vitrine-store{font-size:10px;color:var(--text-dim)}
+    .alert-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--orange);flex-shrink:0;margin-left:2px}
     /* LIST PANELS */
     .list-wrap{width:100%;max-width:640px;margin:0 auto;padding:32px 24px 60px;display:flex;flex-direction:column;gap:20px}
     .panel-title{font-family:'Montserrat',sans-serif;font-size:20px;font-weight:900;margin-bottom:4px}
@@ -209,6 +224,7 @@
       .search-bar{flex-direction:column}
       .btn-search{justify-content:center}
       .list-wrap{padding:24px 16px 40px}
+      .vitrine-grid{grid-template-columns:repeat(2,1fr)}
     }
   </style>
 </head>
@@ -308,6 +324,11 @@
           <button class="btn-search" id="btn-search">Buscar</button>
         </div>
       </div>
+      <!-- VITRINE -->
+      <div id="vitrine-wrap" class="vitrine-wrap hidden">
+        <p class="vitrine-label">Em alta agora</p>
+        <div id="vitrine-grid" class="vitrine-grid"></div>
+      </div>
       <div class="results-wrap" id="results-wrap"></div>
     </div>
 
@@ -383,6 +404,7 @@
 (function(){
   'use strict';
   var TK='radar_token',WK='radar_wishlist',CK='radar_collection';
+  var activeAlerts=new Set();var alertedNames=new Set();var currentSearchSlug=null;
   function getToken(){ return localStorage.getItem(TK); }
   function setToken(t){ localStorage.setItem(TK,t); }
   function clearToken(){ localStorage.removeItem(TK); }
@@ -410,6 +432,8 @@
   function onAppReady(){
     renderWishlist();
     renderCollection();
+    loadAlerts();
+    loadVitrine();
     var t=getToken()||'';
     try{
       var parts=t.split('.');
@@ -453,12 +477,14 @@
 
   document.getElementById('btn-logout').addEventListener('click',function(){
     clearToken();
+    activeAlerts=new Set();alertedNames=new Set();currentSearchSlug=null;
     document.getElementById('results-wrap').innerHTML='';
     document.getElementById('input-search').value='';
     var hero=document.getElementById('search-hero');
     hero.classList.remove('compact');
     var ids=['hero-tag','hero-title','hero-sub'];
     ids.forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.remove('hidden'); });
+    var vw=document.getElementById('vitrine-wrap');if(vw) vw.classList.add('hidden');
     showScreen('screen-login');
   });
 
@@ -469,6 +495,8 @@
     var btn=document.getElementById('btn-search');
     var wrap=document.getElementById('results-wrap');
     var hero=document.getElementById('search-hero');
+    var vw=document.getElementById('vitrine-wrap');
+    if(vw) vw.classList.add('hidden');
     btn.disabled=true;
     hero.classList.add('compact');
     var ids=['hero-tag','hero-title','hero-sub'];
@@ -490,6 +518,7 @@
   }
 
   function renderResults(data){
+    currentSearchSlug=data.slug||null;
     var dn=data.display_name||'',res=data.results||[],ca=data.cached_at;
     var el=document.getElementById('results-wrap');
     var avail=res.filter(function(r){ return r.available!==false; });
@@ -501,12 +530,14 @@
     var wl=getWishlist();
     var inWl=wl.some(function(p){ return p.toLowerCase()===dn.toLowerCase(); });
     var ag=ca?ago(ca):'agora mesmo';
-    var html='<div class="results-meta"><span class="results-term">'+esc(dn)+'</span> &middot; '+avail.length+' loja'+(avail.length!==1?'s':'founders:')+' &middot; '+ag+'</div>';
+    var bellCls='btn-bell'+(currentSearchSlug&&activeAlerts.has(currentSearchSlug)?' active':'');
+    var cheapestPrice=avail[0].price_cents;
+    var html='<div class="results-meta"><span class="results-term">'+esc(dn)+'</span> &middot; '+avail.length+' loja'+(avail.length!==1?'s':'')+' &middot; '+ag+'</div>';
     avail.forEach(function(item,i){
       var isFirst=i===0;
       var thumb;
       if(item.image_url){
-        thumb='<div class="result-thumb" onclick="openModal(\''+esc(item.image_url)+'\',\''+esc(item.product_name||dn)+'\')" title="Ver foto"><img src="'+esc(item.image_url)+'" alt="" loading="lazy" onerror="this.src='/icone-frasco-generico.svg';this.onerror=null"></div>';
+        thumb='<div class="result-thumb" onclick="openModal(\''+esc(item.image_url)+'\',\''+esc(item.product_name||dn)+'\')" title="Ver foto"><img src="'+esc(item.image_url)+'" alt="" loading="lazy" onerror="this.src=\'/icone-frasco-generico.svg\';this.onerror=null"></div>';
       } else {
         thumb='<div class="result-thumb-empty"></div>';
       }
@@ -524,6 +555,7 @@
         '<div class="result-price-block">'+
           priceBlock+
           '<div class="result-actions">'+
+            '<button class="'+bellCls+'" onclick="toggleAlert(\''+esc(currentSearchSlug||'')+'\',\''+esc(dn)+'\','+cheapestPrice+',this)" title="Alerta de preco">&#x1F514;</button>'+
             '<button class="'+hrtCls+'" onclick="toggleWL(\''+esc(dn)+'\',this)">&#x2665;</button>'+
             '<a class="btn-offer" href="'+esc(item.product_url)+'" target="_blank" rel="noopener">ver oferta</a>'+
           '</div>'+
@@ -579,7 +611,9 @@
       return;
     }
     el.innerHTML=wl.map(function(p,i){
+      var hasAlert=alertedNames.has(p.toLowerCase());
       return '<div class="list-item">'+
+        (hasAlert?'<span class="alert-dot" title="Alerta de preco ativo"></span>':'')+
         '<span class="list-item-name">'+esc(p)+'</span>'+
         '<button class="btn-ver-precos" onclick="searchFromList(\''+esc(p)+'\')">ver precos</button>'+
         '<button class="btn-remove" onclick="removeWL('+i+')">&#x2715;</button>'+
@@ -708,6 +742,67 @@
 
   document.getElementById('btn-send-chat').addEventListener('click',sendChat);
   document.getElementById('input-chat').addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendChat(); } });
+
+  // ALERTAS DE PRECO
+  function loadAlerts(){
+    fetch('/api/alerts',{headers:{Authorization:'Bearer '+getToken()}})
+      .then(function(r){ return r.ok?r.json():{alerts:[]}; })
+      .then(function(d){
+        activeAlerts=new Set();alertedNames=new Set();
+        (d.alerts||[]).forEach(function(a){
+          activeAlerts.add(a.product_slug);
+          alertedNames.add((a.display_name||'').toLowerCase());
+        });
+        if(curPanel==='wishlist') renderWishlist();
+      })
+      .catch(function(){});
+  }
+
+  window.toggleAlert=function(slug,displayName,priceCents,btn){
+    if(!slug) return;
+    fetch('/api/alerts',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+getToken()},
+      body:JSON.stringify({slug:slug,display_name:displayName,current_price_cents:priceCents})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.enabled){
+        activeAlerts.add(slug);alertedNames.add(displayName.toLowerCase());
+        btn.classList.add('active');
+      } else {
+        activeAlerts.delete(slug);alertedNames.delete(displayName.toLowerCase());
+        btn.classList.remove('active');
+      }
+      if(curPanel==='wishlist') renderWishlist();
+    })
+    .catch(function(){});
+  };
+
+  // VITRINE
+  function loadVitrine(){
+    fetch('/api/vitrine',{headers:{Authorization:'Bearer '+getToken()}})
+      .then(function(r){ return r.ok?r.json():{items:[]}; })
+      .then(function(d){ renderVitrine(d.items||[]); })
+      .catch(function(){});
+  }
+
+  function renderVitrine(items){
+    var grid=document.getElementById('vitrine-grid');
+    var wrap=document.getElementById('vitrine-wrap');
+    if(!grid||!wrap) return;
+    if(!items.length){ wrap.classList.add('hidden'); return; }
+    grid.innerHTML=items.map(function(item){
+      var imgHtml=item.image_url?'<div class="vitrine-img"><img src="'+esc(item.image_url)+'" alt="" loading="lazy" onerror="this.parentNode.style.display=\'none\'"></div>':'';
+      return '<div class="vitrine-card" onclick="searchFromList(\''+esc(item.display_name)+'\')">'+
+        imgHtml+
+        '<div class="vitrine-name">'+esc(item.display_name)+'</div>'+
+        '<div class="vitrine-price">'+fmtBrl(item.cheapest_price_cents)+'</div>'+
+        '<div class="vitrine-store">'+esc(item.cheapest_store)+'</div>'+
+        '</div>';
+    }).join('');
+    wrap.classList.remove('hidden');
+  }
 
   // IMAGE MODAL
   window.openModal=function(url,name){
