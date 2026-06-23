@@ -14,23 +14,23 @@ async function getCached(slug) {
 
 async function saveCache(slug, displayName, newResults) {
   const db = getDb();
+  const now = new Date();
 
-  // Se já existe cache, preservar resultados de lojas que falharam agora
+  // Merge only with VALID (non-expired) cache — prevents reviving stale wrong data
   const { data: existing } = await db
     .from('price_cache')
     .select('results')
     .eq('product_slug', slug)
+    .gt('expires_at', now.toISOString())
     .maybeSingle();
 
   let merged = newResults;
   if (existing) {
     const oldByStore = Object.fromEntries(existing.results.map(r => [r.store, r]));
     const newByStore = Object.fromEntries(newResults.map(r => [r.store, r]));
-    // lojas novas sobrescrevem, lojas ausentes mantêm o valor anterior
     merged = Object.values({ ...oldByStore, ...newByStore });
   }
 
-  const now = new Date();
   await db.from('price_cache').upsert({
     product_slug: slug,
     display_name: displayName,
