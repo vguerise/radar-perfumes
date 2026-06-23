@@ -1,6 +1,4 @@
-const Anthropic = require('@anthropic-ai/sdk');
-
-const claude = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
+const { encontrarMelhorCorrespondencia } = require('./similaridade');
 
 const STORES = {
   the_gregs: {
@@ -25,18 +23,74 @@ const STORES = {
   }
 };
 
-const CONFIDENCE_MIN = 85;
-const MAX_HTML = 60000;
+const MAX_HTML = 80000;
 
-// Extract data-product-price attributes from Nuvemshop HTML (more reliable than Claude for prices)
-function extractNuvemshopPrices(html) {
-  const items = [];
-  const rx = /data-product-id="(\d+)"[^>]*>[\s\S]*?data-product-price="(\d+)"/g;
+function decodeEntities(s) {
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&apos;/g, "'");
+}
+
+async function fetchHtml(url, timeout) {
+  const r = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+      'Accept-Language': 'pt-BR,pt;q=0.9',
+      'Accept': 'text/html,application/xhtml+xml'
+    },
+    signal: AbortSignal.timeout(timeout)
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.text();
+}
+
+// Extract all product entries from Nuvemshop data-product-* attributes (deterministic, no AI)
+function extractProducts(html, domain) {
+  const products = [];
+  const tagRx = /<[a-z][^>]*\bdata-product-id="(\d+)"([^>]*)>/gi;
+  let m;
+  while ((m = tagRx.exec(html)) !== null) {
+    const attrs = m[0];
+    const name = decodeEntities((attrs.match(/\bdata-product-name="([^"]*)"/) || [])[1] || '');
+    const priceStr = (attrs.match(/\bdata-product-price="(\d+)"/) || [])[1] || '';
+    let url = (attrs.match(/\bdata-product-url="([^"]*)"/) || [])[1] || '';
+    const avail = (attrs.match(/\bdata-product-available="([^"]*)"/) || [])[1];
+
+    if (!name || !priceStr) continue;
+
+    if (url && !url.startsWith('http')) {
+      url = `https://${domain}${url.startsWith('/') ? '' : '/'}${url}`;
+    }
+
+    products.push({
+      productName: name, // field expected by similaridade.js
+      price_cents: parseInt(priceStr, 10),
+      url: url || null,
+      available: avail !== 'false'
+    });
+  }
+  return products;
+}
+
+// Extract schema.org/Product JSON-LD from a product page (the check_jsonld.js approach)
+function extractJsonLd(html) {
+  const rx = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
   let m;
   while ((m = rx.exec(html)) !== null) {
-    items.push({ id: m[1], priceCents: parseInt(m[2], 10) });
+    try {
+      const obj = JSON.parse(m[1].trim());
+      if (obj['@type'] === 'Product' || obj.offers) return obj;
+      if (Array.isArray(obj['@graph'])) {
+        const p = obj['@graph'].find(n => n['@type'] === 'Product');
+        if (p) return p;
+      }
+    } catch {}
   }
-  return items;
+  return null;
 }
 
 async function searchNuvemshop(storeId, term) {
@@ -44,76 +98,50 @@ async function searchNuvemshop(storeId, term) {
 
   let html;
   try {
-    const r = await fetch(store.search_url(term), {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept-Language': 'pt-BR,pt;q=0.9',
-        'Accept': 'text/html'
-      },
-      signal: AbortSignal.timeout(12000)
-    });
-    if (!r.ok) return null;
-    html = await r.text();
+    html = await fetchHtml(store.search_url(term), 10000);
   } catch { return null; }
 
-  // Sanity check: must have product-related content (not a generic error page)
-  if (!html.includes('data-product') && !html.includes('produto') && !html.includes('price')) return null;
+  if (!html.includes('data-product')) return null;
 
-  const trimmed = html.length > MAX_HTML ? html.slice(0, MAX_HTML) : html;
+  const products = extractProducts(html.slice(0, MAX_HTML), store.domain);
+  if (!products.length) return null;
 
-  let extracted;
-  try {
-    const msg = await claude.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 400,
-      messages: [{
-        role: 'user',
-        content: `Extraia dados do produto que corresponde a "${term}" neste HTML de loja de perfumes.
+  const match = encontrarMelhorCorrespondencia(term, products);
+  if (!match) return null;
 
-Retorne APENAS JSON (sem texto extra):
-{"found":true,"product_name":"nome","price_cents":276900,"product_url":"https://dominio.com/produto","image_url":"https://cdn.exemplo.com/img.jpg","available":true,"confidence":95}
+  const { produto: p, confianca } = match;
+  let priceCents = p.price_cents;
+  let imageUrl = null;
 
-Ou se nao encontrar: {"found":false}
-
-Regras:
-- price_cents em centavos (R$ 2.769,00 -> 276900). Se houver preco "de/por", use o "por" (menor)
-- confidence >= 90 so se tiver certeza que e exatamente o produto buscado
-- product_url DEVE comecar com https://${store.domain}/
-- O nome do produto buscado (${term.split('-').join(' ')}) deve estar claramente no resultado
-
-HTML:
-${trimmed}`
-      }]
-    });
-    const text = msg.content[0].text.trim();
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    extracted = JSON.parse(jsonMatch ? jsonMatch[0] : text);
-  } catch { return null; }
-
-  if (!extracted.found) return null;
-  if ((extracted.confidence ?? 0) < CONFIDENCE_MIN) return null;
-  if (!extracted.price_cents || extracted.price_cents <= 0 || extracted.price_cents > 5000000) return null;
-  if (!extracted.product_url?.startsWith(`https://${store.domain}`)) return null;
-
-  const termTokens = term.toLowerCase().split(/[-\s]+/).filter(t => t.length > 2);
-  const nameStr = (extracted.product_name || '').toLowerCase();
-  const matched = termTokens.filter(t => nameStr.includes(t));
-  if (matched.length < Math.ceil(termTokens.length * 0.6)) return null;
-  if (termTokens.length >= 2) {
-    const primary = termTokens.reduce((a, b) => b.length >= a.length ? b : a, termTokens[0]);
-    if (!nameStr.includes(primary)) return null;
+  // Fetch product page for JSON-LD: canonical price (handles "de/por") and official image
+  if (p.url) {
+    try {
+      const productHtml = await fetchHtml(p.url, 6000);
+      const jsonld = extractJsonLd(productHtml);
+      if (jsonld) {
+        const offers = Array.isArray(jsonld.offers) ? jsonld.offers[0] : jsonld.offers;
+        if (offers?.price) {
+          const parsed = parseFloat(String(offers.price).replace(',', '.'));
+          if (parsed > 0 && parsed < 50000) priceCents = Math.round(parsed * 100);
+        }
+        const img = Array.isArray(jsonld.image) ? jsonld.image[0] : jsonld.image;
+        if (img) imageUrl = typeof img === 'string' ? img : (img.url || null);
+      }
+    } catch {}
   }
+
+  if (!priceCents || priceCents <= 0 || priceCents > 5000000) return null;
 
   return {
     store: store.id,
     store_display_name: store.display_name,
-    product_name: extracted.product_name,
-    price_cents: extracted.price_cents,
+    product_name: p.productName,
+    price_cents: priceCents,
     currency: 'BRL',
-    product_url: extracted.product_url,
-    image_url: extracted.image_url || null,
-    available: extracted.available !== false,
-    extraction_confidence: extracted.confidence
+    product_url: p.url || store.search_url(term),
+    image_url: imageUrl,
+    available: p.available,
+    extraction_confidence: Math.round(confianca * 100)
   };
 }
 
