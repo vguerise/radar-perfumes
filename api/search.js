@@ -52,56 +52,63 @@ module.exports = async function handler(req, res) {
   const { query } = req.body || {};
   if (!query?.trim()) return res.status(400).json({ error: 'query obrigatória' });
 
-  // 1. slugs existentes para match determinístico (evita chamada ao Claude)
-  const { data: rows } = await getDb().from('price_cache').select('product_slug');
-  const existingSlugs = (rows || []).map(r => r.product_slug);
+  try {
+    // 1. slugs existentes para match determinístico (evita chamada ao Claude)
+    const { data: rows } = await getDb().from('price_cache').select('product_slug');
+    const existingSlugs = (rows || []).map(r => r.product_slug);
 
-  // 2. normalizar termo → slug canônico
-  const { slug, display_name } = await normalizeQuery(query.trim(), existingSlugs);
+    // 2. normalizar termo → slug canônico
+    const { slug, display_name } = await normalizeQuery(query.trim(), existingSlugs);
 
-  // 3. verificar imagem permanente no Storage (sempre fresca, independente do price cache)
-  const imagemUrl = await getImagemStorage(slug);
+    // 3. verificar imagem permanente no Storage (sempre fresca, independente do price cache)
+    const imagemUrl = await getImagemStorage(slug);
 
-  // 4. checar price cache
-  const cached = await getCached(slug);
-  if (cached) {
-    if (imagemUrl) injetarImagem(cached.results, imagemUrl);
-    await logSearch(query, slug, true);
+    // 4. checar price cache
+    const cached = await getCached(slug);
+    if (cached) {
+      if (imagemUrl) injetarImagem(cached.results, imagemUrl);
+      await logSearch(query, slug, true);
+      return res.status(200).json({
+        slug,
+        display_name: cached.display_name,
+        results: cached.results,
+        cached_at: cached.cached_at
+      });
+    }
+
+    // 5. buscar nas 6 lojas em paralelo
+    const [r0, r1, r2, r3, r4, r5] = await Promise.allSettled([
+      searchNeeche(slug),
+      searchNuvemshop('the_gregs', slug),
+      searchNuvemshop('pequi', slug),
+      searchNuvemshop('king_of_parfums', slug),
+      searchNuvemshop('rivoli', slug),
+      searchNuvemshop('mellalta', slug)
+    ]);
+
+    const results = [r0, r1, r2, r3, r4, r5]
+      .filter(r => r.status === 'fulfilled' && r.value !== null)
+      .map(r => r.value);
+
+    // 6. injetar imagem permanente ou acionar extração assíncrona (fire-and-forget)
+    if (imagemUrl) {
+      injetarImagem(results, imagemUrl);
+    } else {
+      triggerExtracaoImagem(slug).catch(() => {});
+    }
+
+    // 7. salvar cache e log
+    await saveCache(slug, display_name, results);
+    await logSearch(query, slug, false);
+
     return res.status(200).json({
-      display_name: cached.display_name,
-      results: cached.results,
-      cached_at: cached.cached_at
+      slug,
+      display_name,
+      results,
+      cached_at: new Date().toISOString()
     });
+  } catch (err) {
+    console.error('search error:', err.message);
+    return res.status(500).json({ error: 'Erro ao processar busca. Tente novamente.' });
   }
-
-  // 5. buscar nas 6 lojas em paralelo
-  const [r0, r1, r2, r3, r4, r5] = await Promise.allSettled([
-    searchNeeche(slug),
-    searchNuvemshop('the_gregs', slug),
-    searchNuvemshop('pequi', slug),
-    searchNuvemshop('king_of_parfums', slug),
-    searchNuvemshop('rivoli', slug),
-    searchNuvemshop('mellalta', slug)
-  ]);
-
-  const results = [r0, r1, r2, r3, r4, r5]
-    .filter(r => r.status === 'fulfilled' && r.value !== null)
-    .map(r => r.value);
-
-  // 6. injetar imagem permanente ou acionar extração assíncrona (fire-and-forget)
-  if (imagemUrl) {
-    injetarImagem(results, imagemUrl);
-  } else {
-    triggerExtracaoImagem(slug).catch(() => {});
-  }
-
-  // 7. salvar cache e log
-  await saveCache(slug, display_name, results);
-  await logSearch(query, slug, false);
-
-  return res.status(200).json({
-    display_name,
-    results,
-    cached_at: new Date().toISOString()
-  });
 };
