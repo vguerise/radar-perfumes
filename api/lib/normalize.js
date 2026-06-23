@@ -42,7 +42,19 @@ Termo de busca: "${query}"`
     }]
   });
 
-  return JSON.parse(msg.content[0].text.trim());
+  const text = msg.content[0].text.trim();
+  try {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    return JSON.parse(jsonMatch ? jsonMatch[0] : text);
+  } catch {
+    // Claude returned non-JSON: derive slug directly from query
+    const slug = query.toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .trim()
+      .replace(/\s+/g, '-');
+    return { slug, display_name: query };
+  }
 }
 
 module.exports = { normalizeQuery };
