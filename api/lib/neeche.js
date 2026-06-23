@@ -1,4 +1,6 @@
-﻿async function searchNeeche(term) {
+const { encontrarMelhorCorrespondencia } = require('./similaridade');
+
+async function searchNeeche(term) {
   const url = `https://www.neeche.com.br/api/catalog_system/pub/products/search?ft=${encodeURIComponent(term)}`;
 
   let products;
@@ -13,26 +15,14 @@
 
   if (!Array.isArray(products) || !products.length) return null;
 
-  // Find first product whose name matches the search term tokens
-  const termTokens = term.toLowerCase().split(/[-\s]+/).filter(t => t.length > 2);
-  const p = products.find(prod => {
-    const name = (prod.productName || '').toLowerCase();
-    const matched = termTokens.filter(t => name.includes(t));
-    if (matched.length < Math.ceil(termTokens.length * 0.6)) return false;
-    // Tiebreaker: token mais especifico (nome do perfume) deve estar presente
-    if (termTokens.length >= 2) {
-      const primary = termTokens.reduce((a, b) => b.length >= a.length ? b : a, termTokens[0]);
-      if (!name.includes(primary)) return false;
-    }
-    return true;
-  });
-  if (!p) return null;
+  const correspondencia = encontrarMelhorCorrespondencia(term, products);
+  if (!correspondencia) return null;
 
+  const { produto: p, confianca } = correspondencia;
   const item = p.items?.[0];
   const offer = item?.sellers?.[0]?.commertialOffer;
   if (!offer || offer.Price <= 0) return null;
 
-  // Extract image URL from VTEX response
   const rawImageUrl = item?.images?.[0]?.imageUrl || null;
   const imageUrl = rawImageUrl ? rawImageUrl.replace(/-\d+x\d+\.(\w+)$/, '.$1') : null;
 
@@ -45,7 +35,7 @@
     product_url: `https://www.neeche.com.br/${p.linkText}/p`,
     image_url: imageUrl,
     available: (offer.AvailableQuantity || 0) > 0,
-    extraction_confidence: 100
+    extraction_confidence: Math.round(confianca * 100)
   };
 }
 
