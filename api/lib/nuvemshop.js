@@ -1,4 +1,4 @@
-﻿const Anthropic = require('@anthropic-ai/sdk');
+const Anthropic = require('@anthropic-ai/sdk');
 
 const claude = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
 
@@ -8,25 +8,36 @@ const STORES = {
     search_url: (q) => `https://thegregsexclusive.com/busca/?q=${encodeURIComponent(q)}`
   },
   pequi: {
-    id: 'pequi', display_name: 'Pequi Perfumes', domain: 'pequiperfumes.com.br',
+    id: 'pequi', display_name: 'Pequi Perfumes', domain: 'www.pequiperfumes.com.br',
     search_url: (q) => `https://www.pequiperfumes.com.br/busca/?q=${encodeURIComponent(q)}`
   },
   king_of_parfums: {
-    id: 'king_of_parfums', display_name: 'The King of Parfums', domain: 'thekingofparfums.com.br',
+    id: 'king_of_parfums', display_name: 'The King of Parfums', domain: 'www.thekingofparfums.com.br',
     search_url: (q) => `https://www.thekingofparfums.com.br/busca/?q=${encodeURIComponent(q)}`
   },
   rivoli: {
-    id: 'rivoli', display_name: 'Rivoli Perfumaria', domain: 'rivoliperfumaria.com.br',
+    id: 'rivoli', display_name: 'Rivoli Perfumaria', domain: 'www.rivoliperfumaria.com.br',
     search_url: (q) => `https://www.rivoliperfumaria.com.br/busca/?q=${encodeURIComponent(q)}`
   },
   mellalta: {
-    id: 'mellalta', display_name: 'Mell Alta Perfumaria', domain: 'mellaltaperfumaria.com.br',
+    id: 'mellalta', display_name: 'Mell Alta Perfumaria', domain: 'www.mellaltaperfumaria.com.br',
     search_url: (q) => `https://www.mellaltaperfumaria.com.br/loja/busca.php?loja=1053276&palavra_busca=${encodeURIComponent(q)}`
   }
 };
 
-const CONFIDENCE_MIN = 90;
-const MAX_HTML = 80000;
+const CONFIDENCE_MIN = 85;
+const MAX_HTML = 60000;
+
+// Extract data-product-price attributes from Nuvemshop HTML (more reliable than Claude for prices)
+function extractNuvemshopPrices(html) {
+  const items = [];
+  const rx = /data-product-id="(\d+)"[^>]*>[\s\S]*?data-product-price="(\d+)"/g;
+  let m;
+  while ((m = rx.exec(html)) !== null) {
+    items.push({ id: m[1], priceCents: parseInt(m[2], 10) });
+  }
+  return items;
+}
 
 async function searchNuvemshop(storeId, term) {
   const store = STORES[storeId];
@@ -45,40 +56,38 @@ async function searchNuvemshop(storeId, term) {
     html = await r.text();
   } catch { return null; }
 
+  // Sanity check: must have product-related content (not a generic error page)
+  if (!html.includes('data-product') && !html.includes('produto') && !html.includes('price')) return null;
+
   const trimmed = html.length > MAX_HTML ? html.slice(0, MAX_HTML) : html;
 
   let extracted;
   try {
     const msg = await claude.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 500,
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 400,
       messages: [{
         role: 'user',
-        content: `Voce extrai dados de produtos de uma pagina de e-commerce em HTML.
+        content: `Extraia dados do produto que corresponde a "${term}" neste HTML de loja de perfumes.
 
-Dado o HTML abaixo de uma pagina de resultados de busca de uma loja de perfumes,
-encontre o produto que melhor corresponde ao termo de busca "${term}"
-e retorne APENAS um JSON neste formato, sem texto adicional:
+Retorne APENAS JSON (sem texto extra):
+{"found":true,"product_name":"nome","price_cents":276900,"product_url":"https://dominio.com/produto","image_url":"https://cdn.exemplo.com/img.jpg","available":true,"confidence":95}
 
-{"found":true,"product_name":"nome exato do produto","price_cents":276900,"product_url":"https://dominio.com/produto","image_url":"https://cdn.exemplo.com/imagem.jpg","available":true,"confidence":95,"notes":""}
+Ou se nao encontrar: {"found":false}
 
-Se nao encontrar nenhum produto correspondente, retorne:
-{"found":false}
-
-Regras criticas:
-- price_cents em centavos inteiros (R$ 2.769,00 -> 276900)
-- Se houver preco "de/por", use APENAS o preco "por"
-- confidence < 70 se houver ambiguidade entre produtos similares
-- product_url absoluta com https://
-- image_url: URL completa da imagem principal do produto; null se nao encontrar
-- O produto retornado DEVE ter o nome do perfume buscado; se o resultado for outro perfume, confidence deve ser < 50
-- Nunca invente preco; se nao estiver legivel no HTML retorne found:false
+Regras:
+- price_cents em centavos (R$ 2.769,00 -> 276900). Se houver preco "de/por", use o "por" (menor)
+- confidence >= 90 so se tiver certeza que e exatamente o produto buscado
+- product_url DEVE comecar com https://${store.domain}/
+- O nome do produto buscado (${term.split('-').join(' ')}) deve estar claramente no resultado
 
 HTML:
 ${trimmed}`
       }]
     });
-    extracted = JSON.parse(msg.content[0].text.trim());
+    const text = msg.content[0].text.trim();
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    extracted = JSON.parse(jsonMatch ? jsonMatch[0] : text);
   } catch { return null; }
 
   if (!extracted.found) return null;
@@ -86,7 +95,6 @@ ${trimmed}`
   if (!extracted.price_cents || extracted.price_cents <= 0 || extracted.price_cents > 5000000) return null;
   if (!extracted.product_url?.startsWith(`https://${store.domain}`)) return null;
 
-  // Tiebreaker: nome do perfume (nao so a marca) deve estar no resultado
   const termTokens = term.toLowerCase().split(/[-\s]+/).filter(t => t.length > 2);
   const nameStr = (extracted.product_name || '').toLowerCase();
   const matched = termTokens.filter(t => nameStr.includes(t));
