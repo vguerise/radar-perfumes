@@ -506,7 +506,7 @@
       var isFirst=i===0;
       var thumb;
       if(item.image_url){
-        thumb='<div class="result-thumb" onclick="openModal(\''+esc(item.image_url)+'\',\''+esc(item.product_name||dn)+'\')" title="Ver foto"><img src="'+esc(item.image_url)+'" alt="" loading="lazy" onerror="this.parentElement.style.display=\'none\'"></div>';
+        thumb='<div class="result-thumb" onclick="openModal(\''+esc(item.image_url)+'\',\''+esc(item.product_name||dn)+'\')" title="Ver foto"><img src="'+esc(item.image_url)+'" alt="" loading="lazy" onerror="this.src='/icone-frasco-generico.svg';this.onerror=null"></div>';
       } else {
         thumb='<div class="result-thumb-empty"></div>';
       }
