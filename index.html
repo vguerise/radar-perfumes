@@ -779,11 +779,29 @@
     .catch(function(){});
   };
 
-  // VITRINE
+  // VITRINE — stale-while-revalidate: mostra cache imediato, atualiza em background
   function loadVitrine(){
     fetch('/api/vitrine',{headers:{Authorization:'Bearer '+getToken()}})
       .then(function(r){ return r.ok?r.json():{items:[]}; })
-      .then(function(d){ renderVitrine(d.items||[]); })
+      .then(function(d){
+        var items=d.items||[];
+        renderVitrine(items);
+        if(!items.length) return;
+        // Force-refresh cada item em paralelo (ignorando cache)
+        Promise.allSettled(items.map(function(item){
+          return fetch('/api/search',{
+            method:'POST',
+            headers:{'Content-Type':'application/json','Authorization':'Bearer '+getToken()},
+            body:JSON.stringify({query:item.display_name,force:true})
+          });
+        })).then(function(){
+          // Vitrine atualiza com precos frescos quando todas as buscas terminam
+          fetch('/api/vitrine',{headers:{Authorization:'Bearer '+getToken()}})
+            .then(function(r2){ return r2.ok?r2.json():null; })
+            .then(function(d2){ if(d2&&d2.items) renderVitrine(d2.items); })
+            .catch(function(){});
+        }).catch(function(){});
+      })
       .catch(function(){});
   }
 
