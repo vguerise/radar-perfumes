@@ -49,7 +49,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   if (!authGuard(req)) return res.status(401).json({ error: 'Não autorizado' });
 
-  const { query } = req.body || {};
+  const { query, force } = req.body || {};
   if (!query?.trim()) return res.status(400).json({ error: 'query obrigatória' });
 
   try {
@@ -60,20 +60,22 @@ module.exports = async function handler(req, res) {
     // 2. normalizar termo → slug canônico
     const { slug, display_name } = await normalizeQuery(query.trim(), existingSlugs);
 
-    // 3. verificar imagem permanente no Storage (sempre fresca, independente do price cache)
+    // 3. verificar imagem permanente no Storage
     const imagemUrl = await getImagemStorage(slug);
 
-    // 4. checar price cache
-    const cached = await getCached(slug);
-    if (cached) {
-      if (imagemUrl) injetarImagem(cached.results, imagemUrl);
-      await logSearch(query, slug, true);
-      return res.status(200).json({
-        slug,
-        display_name: cached.display_name,
-        results: cached.results,
-        cached_at: cached.cached_at
-      });
+    // 4. checar price cache (ignorado se force=true para garantir preços frescos)
+    if (!force) {
+      const cached = await getCached(slug);
+      if (cached) {
+        if (imagemUrl) injetarImagem(cached.results, imagemUrl);
+        await logSearch(query, slug, true);
+        return res.status(200).json({
+          slug,
+          display_name: cached.display_name,
+          results: cached.results,
+          cached_at: cached.cached_at
+        });
+      }
     }
 
     // 5. buscar nas 6 lojas em paralelo
@@ -90,7 +92,7 @@ module.exports = async function handler(req, res) {
       .filter(r => r.status === 'fulfilled' && r.value !== null)
       .map(r => r.value);
 
-    // 6. injetar imagem permanente ou acionar extração assíncrona (fire-and-forget)
+    // 6. injetar imagem permanente ou acionar extração assíncrona
     if (imagemUrl) {
       injetarImagem(results, imagemUrl);
     } else {
