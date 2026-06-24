@@ -27,12 +27,8 @@ const MAX_HTML = 80000;
 
 function decodeEntities(s) {
   return s
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
-    .replace(/&apos;/g, "'");
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&apos;/g, "'");
 }
 
 async function fetchHtml(url, timeout) {
@@ -48,35 +44,50 @@ async function fetchHtml(url, timeout) {
   return r.text();
 }
 
-// Extract all product entries from Nuvemshop data-product-* attributes (deterministic, no AI)
+function toAbsUrl(url, domain) {
+  if (!url) return null;
+  if (url.startsWith('http')) return url;
+  if (url.startsWith('//')) return `https:${url}`;
+  return `https://${domain}${url.startsWith('/') ? '' : '/'}${url}`;
+}
+
+// Extrai produtos usando janela de contexto ao redor de cada data-product-id.
+// Robusto para temas que separam os atributos em elementos filhos.
 function extractProducts(html, domain) {
   const products = [];
-  const tagRx = /<[a-z][^>]*\bdata-product-id="(\d+)"([^>]*)>/gi;
+  const seen = new Set();
+  const idRx = /data-product-id="(\d+)"/g;
   let m;
-  while ((m = tagRx.exec(html)) !== null) {
-    const attrs = m[0];
-    const name = decodeEntities((attrs.match(/\bdata-product-name="([^"]*)"/) || [])[1] || '');
-    const priceStr = (attrs.match(/\bdata-product-price="(\d+)"/) || [])[1] || '';
-    let url = (attrs.match(/\bdata-product-url="([^"]*)"/) || [])[1] || '';
-    const avail = (attrs.match(/\bdata-product-available="([^"]*)"/) || [])[1];
+
+  while ((m = idRx.exec(html)) !== null) {
+    const id = m[1];
+    if (seen.has(id)) continue;
+    seen.add(id);
+
+    // Janela de contexto: 200 chars antes + 2000 chars depois do data-product-id
+    const start = Math.max(0, m.index - 200);
+    const end = Math.min(html.length, m.index + 2000);
+    const block = html.slice(start, end);
+
+    const name = decodeEntities((block.match(/\bdata-product-name="([^"]*)"/) || [])[1] || '');
+    const priceStr = (block.match(/\bdata-product-price="(\d+)"/) || [])[1] || '';
+    const rawUrl = (block.match(/\bdata-product-url="([^"]*)"/) || [])[1] || '';
+    const avail = (block.match(/\bdata-product-available="([^"]*)"/) || [])[1];
 
     if (!name || !priceStr) continue;
 
-    if (url && !url.startsWith('http')) {
-      url = `https://${domain}${url.startsWith('/') ? '' : '/'}${url}`;
-    }
-
     products.push({
-      productName: name, // field expected by similaridade.js
+      productName: name,
       price_cents: parseInt(priceStr, 10),
-      url: url || null,
+      url: toAbsUrl(rawUrl, domain),
       available: avail !== 'false'
     });
   }
+
   return products;
 }
 
-// Extract schema.org/Product JSON-LD from a product page (the check_jsonld.js approach)
+// Extrai schema.org/Product JSON-LD de uma página de produto (abordagem do check_jsonld.js)
 function extractJsonLd(html) {
   const rx = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
   let m;
@@ -113,7 +124,7 @@ async function searchNuvemshop(storeId, term) {
   let priceCents = p.price_cents;
   let imageUrl = null;
 
-  // Fetch product page for JSON-LD: canonical price (handles "de/por") and official image
+  // Busca JSON-LD na página do produto: preço canônico (lida com de/por) + imagem oficial
   if (p.url) {
     try {
       const productHtml = await fetchHtml(p.url, 6000);
@@ -121,8 +132,14 @@ async function searchNuvemshop(storeId, term) {
       if (jsonld) {
         const offers = Array.isArray(jsonld.offers) ? jsonld.offers[0] : jsonld.offers;
         if (offers?.price) {
-          const parsed = parseFloat(String(offers.price).replace(',', '.'));
-          if (parsed > 0 && parsed < 50000) priceCents = Math.round(parsed * 100);
+          // JSON-LD usa ponto como decimal (ex: "2769.00"), não formato BR
+          const parsed = parseFloat(String(offers.price));
+          // Detecta se o valor está em reais (< 50000) ou centavos (>= 50000)
+          if (parsed > 0) {
+            priceCents = parsed >= 100 && parsed < 500000
+              ? Math.round(parsed * 100)   // valor em reais → converte para centavos
+              : Math.round(parsed);         // já em centavos (raro, mas possível)
+          }
         }
         const img = Array.isArray(jsonld.image) ? jsonld.image[0] : jsonld.image;
         if (img) imageUrl = typeof img === 'string' ? img : (img.url || null);
