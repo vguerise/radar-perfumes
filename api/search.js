@@ -53,17 +53,17 @@ module.exports = async function handler(req, res) {
   if (!query?.trim()) return res.status(400).json({ error: 'query obrigatória' });
 
   try {
-    // 1. slugs existentes para match determinístico (evita chamada ao Claude)
+    // 1. slugs existentes para match determinístico
     const { data: rows } = await getDb().from('price_cache').select('product_slug');
     const existingSlugs = (rows || []).map(r => r.product_slug);
 
     // 2. normalizar termo → slug canônico
     const { slug, display_name } = await normalizeQuery(query.trim(), existingSlugs);
 
-    // 3. verificar imagem permanente no Storage
+    // 3. imagem permanente no Storage
     const imagemUrl = await getImagemStorage(slug);
 
-    // 4. checar price cache (ignorado se force=true para garantir preços frescos)
+    // 4. cache — ignorado se force=true
     if (!force) {
       const cached = await getCached(slug);
       if (cached) {
@@ -76,6 +76,13 @@ module.exports = async function handler(req, res) {
           cached_at: cached.cached_at
         });
       }
+    } else {
+      // Force: expira o cache existente para que saveCache não faça merge
+      // com preços antigos. Garante substituição completa.
+      await getDb()
+        .from('price_cache')
+        .update({ expires_at: new Date().toISOString() })
+        .eq('product_slug', slug);
     }
 
     // 5. buscar nas 6 lojas em paralelo
@@ -92,7 +99,7 @@ module.exports = async function handler(req, res) {
       .filter(r => r.status === 'fulfilled' && r.value !== null)
       .map(r => r.value);
 
-    // 6. injetar imagem permanente ou acionar extração assíncrona
+    // 6. imagem permanente ou acionar extração assíncrona
     if (imagemUrl) {
       injetarImagem(results, imagemUrl);
     } else {
